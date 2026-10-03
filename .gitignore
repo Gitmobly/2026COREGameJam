@@ -17,7 +17,7 @@
 *.pch
 
 # Libraries
-*.lib
+# *.lib
 *.a
 *.la
 *.lo
@@ -53,3 +53,7 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# Shit
+build/
+.build/
