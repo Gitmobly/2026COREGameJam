@@ -47,7 +47,7 @@ void* arena_push(arena_t* a, size_t size, size_t align)
 	a->used = aligned + size;
 
 	return p;
-};
+}
 
 void* arena_push_zero(arena_t* a, size_t size, size_t align)
 {
@@ -62,7 +62,7 @@ void* arena_push_zero(arena_t* a, size_t size, size_t align)
 	a->used = aligned + size;
 
 	return p;
-};
+}
 
 void arena_pop(arena_t* a, size_t size)
 {
@@ -70,11 +70,11 @@ void arena_pop(arena_t* a, size_t size)
 	ASSERT(size <= a->used);
 
 	a->used -= size;
-};
+}
 
 void arena_clear(arena_t* a)
 {
 	ASSERT(a);
 
 	arena_pop(a, a->used);
-};
+}

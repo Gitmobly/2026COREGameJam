@@ -1,4 +1,7 @@
-#include "vendor/raylib/raylib.h"
+#include <raylib.h>
+
+#include "arena.h"
+#include "utils.h"
 
 #define DEFAULT_WIDTH  800
 #define DEFAULT_HEIGHT 600
