@@ -1,0 +1,30 @@
+name: Compile Linux
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Update ubuntu
+        run: sudo apt-get update
+      - name: Set up deps
+        run: |
+         sudo apt-get install -y gcc
+         sudo apt-get install -y --no-install-recommends libglfw3 libglfw3-dev libx11-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev libxext-dev libxfixes-dev libwayland-dev libxkbcommon-dev
+         chmod +x ./build.sh
+      - name: Compile
+        run: ./build.sh
+      - name: Check
+        run: ls -l ./build
+
+
