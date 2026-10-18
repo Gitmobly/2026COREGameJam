@@ -6,7 +6,7 @@ fi
 mkdir ./build
 
 CFLAGS_STATIC="-I src/vendor/raylib -L lib -Wl,-Bstatic -lraylib -Wl,-Bdynamic -lm -lpthread -ldl -lrt -lGL -lX11"
-CFLAGS="-Wall -Wextra -Wpedantic -Werror -g src/*/*.c src/*.c -o build/game"
+CFLAGS="-Wall -Wextra -Wpedantic -Werror -g src/*.c -o build/game"
 
 if [[ $OSTYPE == darwin* ]]; then
     # todo: static?
