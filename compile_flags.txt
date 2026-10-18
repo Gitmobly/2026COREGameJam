@@ -1,0 +1,1 @@
+-I src/vendor/raylib -I src/*/*.h -I src/*.h

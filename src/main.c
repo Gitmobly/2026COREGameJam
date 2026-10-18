@@ -1,25 +1,29 @@
 #include <raylib.h>
+#include <math.h>
+#include <stdio.h>
 
-#include "arena.h"
-#include "utils.h"
+#include "graphics/graphics.h"
+#include "map/map.h"
+#include "entity/entity.h"
+#include "input/input.h"
+#include "weapon/weapon.h"
 
-#define DEFAULT_WIDTH  800
-#define DEFAULT_HEIGHT 600
+int main(void) {
+  graphics_init();
+  
+  map_world_t *world = map_init_world();
+  entity_t* monster = entity_init_monster();
+  entity_t* player = entity_player_init();
+  player->weapon = weapon_init_base();
 
-int main(void)
-{
-	InitWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, "Game");
-	SetTargetFPS(60);
+  map_room_t *room = &world->rooms[8][8];
+  room->entities[0] = player;
+  room->entities[1] = monster;
 
-	while (!WindowShouldClose())
-	{
-		BeginDrawing();
-		ClearBackground(RAYWHITE);
-		DrawText("2026 CORE GAME JAM", 10, 10, 20, DARKGRAY);
-		EndDrawing();
-	}
+  while (!WindowShouldClose()) {
+    graphics_loop(room);
+    entity_interactions(room);
+  }
 
-	CloseWindow();
-
-	return 0;
+  CloseWindow();
 }
