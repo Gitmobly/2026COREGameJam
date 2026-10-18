@@ -44,7 +44,7 @@ typedef int64_t s64;
 
 typedef uint32_t b32;
 
-typedef double  f32;
+typedef float  f32;
 typedef double f64;
 
 typedef struct dims_t
