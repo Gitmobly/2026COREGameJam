@@ -57,7 +57,8 @@ void entity_interactions(map_room_t* room)
 
 		if (ents[i]->hp <= 0)
 		{
-			free(ents[i]);
+			// Todo - free list or just not use ptr array for ents since we have a max bound
+			// free(ents[i]);
 			ents[i] = NULL;
 			continue;
 		}
