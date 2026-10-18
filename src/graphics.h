@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../map/map.h"
+#include "map.h"
 
 int SCREEN_WD, SCREEN_HT;
 
