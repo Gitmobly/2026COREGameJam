@@ -14,8 +14,8 @@ int main(void)
 	arena_t* permanent_arena = arena_init(MEGABYTES(64), ARENA_NO_FLAGS);
 
 	map_world_t* world	 = map_init_world();
-	entity_t*	 monster = entity_init_monster();
-	entity_t*	 player	 = entity_player_init();
+	entity_t*	 monster = entity_init_monster(permanent_arena);
+	entity_t*	 player	 = entity_player_init(permanent_arena);
 	player->weapon		 = weapon_init_base(permanent_arena);
 
 	map_room_t* room  = &world->rooms[8][8];

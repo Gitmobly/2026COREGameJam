@@ -2,13 +2,14 @@
 #include <string.h>
 #include <math.h>
 
+#include "arena.h"
 #include "entity.h"
 
 char* monster_name = "jeb_";
 
-entity_t* entity_init_monster(void)
+entity_t* entity_init_monster(arena_t* arena)
 {
-	entity_t* mon = malloc(sizeof(entity_t));
+	entity_t* mon = arena_push_struct(arena, entity_t);
 	mon->hp		  = 50;
 	mon->speed	  = 1.5;
 	mon->name	  = monster_name;

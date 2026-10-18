@@ -4,7 +4,7 @@
 
 #include "entity.h"
 
-char *projectile_name = "The Hero of Our Story", *projectile_type = "projectile";
+char* projectile_name = "The Hero of Our Story";
 
 void entity_projectile_interact(entity_t* proj, entity_t* other, map_room_t* room)
 {

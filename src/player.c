@@ -8,9 +8,9 @@
 
 char* player_name = "The Hero of Our Story";
 
-entity_t* entity_player_init(void)
+entity_t* entity_player_init(arena_t* arena)
 {
-	entity_t* pla = malloc(sizeof(entity_t));
+	entity_t* pla = arena_push_struct(arena, entity_t);
 	pla->hp		  = 100;
 	pla->speed	  = 4;
 	pla->name	  = player_name;
