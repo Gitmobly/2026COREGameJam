@@ -5,7 +5,9 @@
 
 #include "graphics.h"
 
-int SCREEN_WD = 800, SCREEN_HT = 600, PAD = 32;
+#define SCREEN_WD 800
+#define SCREEN_HT 600
+#define PAD		  32
 
 Color get_color(entity_t* entity)
 {
