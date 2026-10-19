@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils.h"
+#include "ui.h"
 
 typedef struct
 {
@@ -9,4 +10,6 @@ typedef struct
 	b32 action;
 } input_state_t;
 
-input_state_t input_update(void);
+input_state_t input_update_entity(void);
+
+void input_update_ui(ui_t* ui);
