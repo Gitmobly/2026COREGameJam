@@ -3,8 +3,8 @@
 #include "vendor/raylib/raylib.h"
 #include "input.h"
 
-#define mute(c) ((c > 10) ? c - 30 : c + 30)
-#define unmute(c) ((c > 10) ? c + 30 : c - 30)
+#define MUTE(c) ((c > 30) ? c - 30 : c + 30)
+#define UNMUTE(c) ((c > 30) ? c + 30 : c - 30)
 
 input_state_t input_update_entity(void)
 {
@@ -29,9 +29,9 @@ void input_update_ui(ui_t *ui) {
 			if(b.button_muted) continue;
 
 			if(!CheckCollisionPointRec(mouse_pos, b.rect)) continue;
-			b.bg.r = mute(b.bg.r);
-			b.bg.g = mute(b.bg.g);
-			b.bg.b = mute(b.bg.b);
+			b.bg.r = MUTE(b.bg.r);
+			b.bg.g = MUTE(b.bg.g);
+			b.bg.b = MUTE(b.bg.b);
 			b.button_muted = true;
 			ui->buttons[i] = b;
 		}
@@ -45,9 +45,9 @@ void input_update_ui(ui_t *ui) {
 			if(!b.button_muted) continue;
 
 			if(!CheckCollisionPointRec(mouse_pos, b.rect)) continue;
-			b.bg.r = unmute(b.bg.r);
-			b.bg.g = unmute(b.bg.g);
-			b.bg.b = unmute(b.bg.b);
+			b.bg.r = UNMUTE(b.bg.r);
+			b.bg.g = UNMUTE(b.bg.g);
+			b.bg.b = UNMUTE(b.bg.b);
 			b.button_muted = false;
 			b.click();
 			ui->buttons[i] = b;

@@ -5,18 +5,25 @@
 #include "graphics.h"
 #include "vendor/raylib/raylib.h"
 #include "vendor/raylib/raymath.h"
+#include <inttypes.h>
+#include <stdio.h>
 
 #define MAX_BUTTONS 32
+#define PAD_MASK 0xFF
+#define PAD_BUTTON(anchor, offset) (anchor | ((offset > 0xFF) ? 0 : offset))
 
 /*
 ENUM to set x/y value to a anchored pos i.e. center, left, top, bottom, right
 not best way to impl it but cba to do a hole thing for it so it just a neg number
 Also could be defs but meh zig brain
+
+This also lets us pad/add offset to button with e.g. POS_AXIS | 25
+Max is 255 or 0xFF
  */
 typedef enum {
-  CENTER_AXIS = -999,
-  NEG_AXIS = -998,
-  POS_AXIS = -997,
+  CENTER_AXIS = 0xFFFF00,
+  NEG_AXIS = 0xFF0000,
+  POS_AXIS = 0x00FF00,
 } ANCHOR_POS;
 
 /*
@@ -72,30 +79,45 @@ inline static button_t create_button(int x, int y, int w, int h, Color bg, Color
     button.h+textSize.y,
   };
 
+  int xv = button.x;
+  int yv = button.y;
 
-  switch (button.x) {
+  // clear first 8 bits so we can check agenst enum value
+  xv &= ~PAD_MASK;
+  yv &= ~PAD_MASK;
+
+
+  switch (xv) {
     case CENTER_AXIS:
       x = COMP_CENTER_X(buttonSize.x);
       break;
     case POS_AXIS:
-      x = SCREEN_WD - buttonSize.x;
+      // padding 
+      xv = (button.x & PAD_MASK);
+
+      x = SCREEN_WD - (buttonSize.x - xv);
       break;
     case NEG_AXIS:
-      x = 0;
+      // padding
+      xv = (button.x & PAD_MASK);
+      printf("%d\n", xv);
+      x = 0 + xv;
       break;
     default:
       break;
   }
 
-  switch (button.y) {
+  switch (yv) {
     case CENTER_AXIS:
       y = COMP_CENTER_Y(buttonSize.y);
       break;
     case POS_AXIS:
-      y = 0;
+      yv = (button.y & PAD_MASK);
+      y = 0 + yv;
       break;
     case NEG_AXIS:
-      y = SCREEN_HT - buttonSize.y;
+      yv = (button.y & PAD_MASK);
+      y = SCREEN_HT - (buttonSize.y - yv);
       break;
     default:
       break;

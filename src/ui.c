@@ -24,7 +24,7 @@ ui_t init_start_ui(){
   for (int i=0; i<MAX_BUTTONS; i++) ui.buttons[i].owner = NO_OWNER;
 
   button_t start_button =
-    create_button(CENTER_AXIS, SCREEN_HT - 100, 10, 5, RAYWHITE, BLACK, "START GAME", start_click);
+    create_button(PAD_BUTTON(NEG_AXIS, 25), SCREEN_HT - 100, 10, 5, RAYWHITE, BLACK, "START GAME", start_click);
 
   ui.buttons[0] = start_button;
 
