@@ -2,24 +2,33 @@
 #define GAMEUI
 
 #include "gamestate.h"
-#include "graphics.h"
 #include "vendor/raylib/raylib.h"
-#include "vendor/raylib/raymath.h"
 #include <inttypes.h>
-#include <stdio.h>
 
 #define MAX_BUTTONS 32
+#define MAX_LABLES 64
+#define MAX_IMAGES 16
+
 #define PAD_MASK 0xFF
-#define PAD_BUTTON(anchor, offset) (anchor | ((offset > 0xFF) ? 0 : offset))
+#define MUTE(c) ((c > 30) ? c - 30 : c + 30)
+#define UNMUTE(c) ((c > 30) ? c + 30 : c - 30)
 
 /*
-ENUM to set x/y value to a anchored pos i.e. center, left, top, bottom, right
-not best way to impl it but cba to do a hole thing for it so it just a neg number
-Also could be defs but meh zig brain
+* Macro to pad out componets anchor pos
+*/
+#define PAD_COMP(anchor, offset) (anchor | ((offset > PAD_MASK) ? 0 : offset))
 
-This also lets us pad/add offset to button with e.g. POS_AXIS | 25
-Max is 255 or 0xFF
- */
+/*
+* ENUM to set x/y value to a anchored pos i.e. center, left, top, bottom, right
+* not best way to impl it but cba to do a hole thing for it so its just a big number
+* Also could be defines but meh zig brain
+*
+* This also lets us pad/add offset to button e.g. POS_AXIS | 25
+* Max is 255 or 0xFF
+*
+* Also before anyone says "i might put this number in by accident"
+* Please ask yourself why you are putting a button at x|y 4,294,967,040
+*/
 typedef enum {
   CENTER_AXIS = 0xFFFF00,
   NEG_AXIS = 0xFF0000,
@@ -27,123 +36,114 @@ typedef enum {
 } ANCHOR_POS;
 
 /*
-button struct font size and font are set by def atm
+* button struct font size and font are set by def atm
 */
 typedef struct button_t {
-  // could remove these too but again cba
-  int x,y,w,h;
+  unsigned int x,y,w,h;
   UI_STATE owner;
+  Color bg, fg;
   float font_size;
   Rectangle rect;
   Vector2 textPos;
-  Color bg, fg;
   Font font;
   const char* text;
-  void(*click)(void);
+  void(*click)(gamestate*);
   bool button_muted;
 } button_t;
 
+typedef struct lable_t {
+  unsigned int x, y;
+  UI_STATE owner;
+  Color fg;
+  float font_size;
+  Font font;
+  const char* text;
+} lable_t;
 
+typedef struct image_t {
+  UI_STATE owner;
+  unsigned int rot;
+  Rectangle pos;
+  Rectangle texture_pos;
+  Texture2D texture;
+} image_t ;
+
+
+/*
+* UI Struct for building a ui 
+*/
 typedef struct ui_t {
   UI_STATE owner;
   button_t buttons[MAX_BUTTONS];
+  lable_t lables[MAX_LABLES];
+  image_t images[MAX_IMAGES];
 } ui_t;
 
-// probs doesnt need to be pointer 
+/*
+* Draws a button to the screen
+*/
 inline static void draw_button(button_t* button){
   DrawRectangleRounded(button->rect, 0.5f, 24, button->bg);
   DrawTextEx(button->font, button->text, button->textPos, button->font_size, button->font_size * .1f, button->fg);
 }
 
-inline static button_t create_button(int x, int y, int w, int h, Color bg, Color fg, const char* text, void (*click)(void)) {
-  button_t button = {
-    .x = x,
-    .y = y,
-    .w = w,
-    .h = h,
-    .text = text,
-    .click = click,
-    .bg = bg,
-    .fg = fg,
-    .owner = START_UI,
-    .font = GetFontDefault(),
-    .font_size = 40.0,
-    .button_muted = false,
-  };
-
-  Vector2 textSize = MeasureTextEx(button.font, button.text, button.font_size, button.font_size*.1f);
-
-  
-  Vector2 buttonSize = (Vector2) {
-    button.w+textSize.x,
-    button.h+textSize.y,
-  };
-
-  int xv = button.x;
-  int yv = button.y;
-
-  // clear first 8 bits so we can check agenst enum value
-  xv &= ~PAD_MASK;
-  yv &= ~PAD_MASK;
-
-
-  switch (xv) {
-    case CENTER_AXIS:
-      x = COMP_CENTER_X(buttonSize.x);
-      break;
-    case POS_AXIS:
-      // padding 
-      xv = (button.x & PAD_MASK);
-
-      x = SCREEN_WD - (buttonSize.x - xv);
-      break;
-    case NEG_AXIS:
-      // padding
-      xv = (button.x & PAD_MASK);
-      printf("%d\n", xv);
-      x = 0 + xv;
-      break;
-    default:
-      break;
-  }
-
-  switch (yv) {
-    case CENTER_AXIS:
-      y = COMP_CENTER_Y(buttonSize.y);
-      break;
-    case POS_AXIS:
-      yv = (button.y & PAD_MASK);
-      y = 0 + yv;
-      break;
-    case NEG_AXIS:
-      yv = (button.y & PAD_MASK);
-      y = SCREEN_HT - (buttonSize.y - yv);
-      break;
-    default:
-      break;
-  }
-
-
-  Vector2 textPos = (Vector2) {
-    x + Lerp(0.0f, buttonSize.x - textSize.x, (float)0.5),
-    y + Lerp(0.0f, buttonSize.y - textSize.y, (float)0.5),
-  };
-
-  Rectangle rect = {(float)x, (float)y, buttonSize.x, buttonSize.y};
-
-  button.rect = rect;
-  button.textPos = textPos;
-
-  return button;
+inline static void draw_lable(lable_t* lable){
+  DrawTextEx(lable->font, lable->text, (Vector2){(float)lable->x, (float)lable->y}, lable->font_size, lable->font_size*.1f, lable->fg);
 }
 
+inline static void draw_image(image_t* image){
+  DrawTexturePro(image->texture, image->texture_pos, image->pos, (Vector2){0, 0}, image->rot, RAYWHITE);
+}
+
+/*
+* Creates a button struct
+*
+* x - the x position, can be anchored with ANCHOR_POS enum and you can add padding to the anchor with PAD_BUTTON(ANCHOR_POS, PADDING) or just ANCHOR_POS | PADDING
+*
+* y - the y position, can be anchored with ANCHOR_POS enum and you can add padding to the anchor with PAD_BUTTON(ANCHOR_POS, PADDING) or just ANCHOR_POS | PADDING
+*
+* w - Width is calculated from the text width, so this is added onto that width
+*
+* h - Height is calculated from the text Height, so this is added onto that height
+*
+* bg - Background color
+*
+* fg - Text color
+*
+* text - the button text
+*
+* click - onclick function pointer, takes (gamestate*)
+*
+* Font size and font is set by default
+*/
+button_t create_button(unsigned int x, unsigned int y, int w, int h, Color bg, Color fg, const char* text, void (*click)(gamestate*));
+
+lable_t create_lable(unsigned int x, unsigned int y, const char* text, Color fg, float fontSize, Font font);
+
+image_t create_image(Rectangle rect, Rectangle texture_pos, Texture2D texture, unsigned int rot);
+
+
+Vector2 calculate_axis_pos(unsigned int x, unsigned int y, Vector2 widthHeight);
+Vector2 calculate_axis_pos_rec(Rectangle rect);
 
 
 /* -- Function def  -- */
 
-ui_t init_start_ui( void );
 
-void start_click( void );
+void unload_current_ui( gamestate* state);
+
+
+ui_t* init_game_ui( void );
+
+/* Start UI function */
+ui_t* init_start_ui( void );
+void start_click_start( gamestate* state);
+void options_click_start( gamestate* state);
+/* Start UI function */
+
+ui_t* init_options_ui ( void );
+void back_click_options( gamestate* state );
+
 
 void render_current_ui ( ui_t* ui );
 

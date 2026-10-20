@@ -40,6 +40,8 @@ void graphics_loop(gamestate* state)
 		case COMBAT_UI:
 			draw_combat_ui(state, NULL);
 			break;
+		case OPTIONS_UI:
+			draw_options_ui(state);
 		case NO_OWNER:
 			break;
 	}
@@ -49,6 +51,10 @@ void graphics_loop(gamestate* state)
 }
 
 void draw_start_ui(gamestate* state){
+	render_current_ui(state->active_ui);
+}
+
+void draw_options_ui(gamestate* state) {
 	render_current_ui(state->active_ui);
 }
 

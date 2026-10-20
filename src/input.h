@@ -1,7 +1,7 @@
 #pragma once
 
 #include "utils.h"
-#include "ui.h"
+#include "gamestate.h"
 
 typedef struct
 {
@@ -12,4 +12,4 @@ typedef struct
 
 input_state_t input_update_entity(void);
 
-void input_update_ui(ui_t* ui);
+void input_update_ui(gamestate* ui);

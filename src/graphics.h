@@ -16,5 +16,6 @@
 void graphics_init(void);
 void graphics_loop(gamestate* state);
 void draw_start_ui(gamestate* state);
+void draw_options_ui(gamestate* state);
 void draw_combat_ui(gamestate* state, entity_t* entity);
 void draw_game(gamestate* state);

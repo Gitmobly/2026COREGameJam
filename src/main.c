@@ -24,20 +24,23 @@ int main(void)
 	room->entities[0] = player;
 	room->entities[1] = monster;
 
-	ui_t start = init_start_ui();
+	ui_t* start = init_start_ui();
 	
 	gamestate state = {
 		.ui_state = START_UI,
 		.active_room = room,
-		.active_ui = &start,
+		.active_ui = start,
 	};
 
 	while (!WindowShouldClose())
 	{
 		graphics_loop(&state);
-		input_update_ui(state.active_ui);
+		input_update_ui(&state);
 
-		entity_interactions(room);
+		if(state.ui_state == GAME) {
+			// Pause entity interactions if ui switches
+			entity_interactions(room);
+		}
 	}
 
 	CloseWindow();

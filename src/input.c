@@ -3,8 +3,6 @@
 #include "vendor/raylib/raylib.h"
 #include "input.h"
 
-#define MUTE(c) ((c > 30) ? c - 30 : c + 30)
-#define UNMUTE(c) ((c > 30) ? c + 30 : c - 30)
 
 input_state_t input_update_entity(void)
 {
@@ -20,9 +18,11 @@ input_state_t input_update_entity(void)
 }
 
 
-void input_update_ui(ui_t *ui) {
+void input_update_ui(gamestate* state) {
+	if(state->ui_state == NO_OWNER) return;
 	if(IsMouseButtonDown(MOUSE_LEFT_BUTTON)){
 		Vector2 mouse_pos = GetMousePosition();
+		ui_t* ui = state->active_ui;
 		for (int i = 0; i < MAX_BUTTONS; i++) {
 			if(ui->buttons[i].owner == NO_OWNER)continue;
 			button_t b = ui->buttons[i];
@@ -39,6 +39,7 @@ void input_update_ui(ui_t *ui) {
 
 	if(IsMouseButtonUp(MOUSE_LEFT_BUTTON)) {
 		Vector2 mouse_pos = GetMousePosition();
+		ui_t* ui = state->active_ui;
 		for (int i = 0; i < MAX_BUTTONS; i++) {
 			if(ui->buttons[i].owner == NO_OWNER)continue;
 			button_t b = ui->buttons[i];
@@ -49,7 +50,7 @@ void input_update_ui(ui_t *ui) {
 			b.bg.g = UNMUTE(b.bg.g);
 			b.bg.b = UNMUTE(b.bg.b);
 			b.button_muted = false;
-			b.click();
+			b.click(state);
 			ui->buttons[i] = b;
 		}
 	}

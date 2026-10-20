@@ -13,6 +13,7 @@ typedef enum {
   START_UI = 0,
   GAME = 1,
   COMBAT_UI = 2,
+  OPTIONS_UI = 3,
 } UI_STATE;
 
 
@@ -29,7 +30,6 @@ typedef struct {
   /* Current Active Room/lvl */
   map_room_t* active_room; 
   struct ui_t* active_ui;
-  /**/
 
 } gamestate; 
 
