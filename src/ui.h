@@ -130,7 +130,9 @@ Vector2 calculate_axis_pos_rec(Rectangle rect);
 /* -- Function def  -- */
 
 
-void unload_current_ui( gamestate* state);
+void unload_ui( ui_t* ui );
+void render_current_ui ( ui_t* ui );
+void init_ui_components (ui_t* ui );
 
 
 ui_t* init_game_ui( void );
@@ -144,8 +146,8 @@ void options_click_start( gamestate* state);
 ui_t* init_options_ui ( void );
 void back_click_options( gamestate* state );
 
+ui_t* init_comabat_ui ( void );
 
-void render_current_ui ( ui_t* ui );
 
 
 

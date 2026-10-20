@@ -8,6 +8,7 @@
 ui_t start_ui;
 ui_t game_ui;
 ui_t options_ui;
+ui_t combat_ui;
 
 
 button_t create_button(unsigned int x, unsigned int y, int w, int h, Color bg, Color fg, const char *text, void (*click)(gamestate*)) {
@@ -159,25 +160,29 @@ void render_current_ui(ui_t* ui) {
   }
 }
 
-void unload_current_ui(gamestate *state) {
+void unload_ui(ui_t* ui) {
   for (int i = 0; i < MAX_IMAGES; i++) {
-    image_t img = state->active_ui->images[i];
+    image_t img = ui->images[i];
     if(img.owner == NO_OWNER) continue;
     UnloadTexture(img.texture);
   }
 }
 
+void init_ui_components(ui_t *ui) {
+  // set all button owner to -1 (no owner)
+  for (int i=0; i<MAX_BUTTONS; i++) ui->buttons[i].owner = NO_OWNER;
+  for (int i=0; i<MAX_LABLES; i++) ui->lables[i].owner = NO_OWNER;
+  for (int i=0; i<MAX_IMAGES; i++) ui->images[i].owner = NO_OWNER;
+}
 
 
-ui_t* init_start_ui(){
+
+ui_t* init_start_ui(void){
   ui_t ui = {
     .owner = START_UI,
   };
 
-  // set all button owner to -1 (no owner)
-  for (int i=0; i<MAX_BUTTONS; i++) ui.buttons[i].owner = NO_OWNER;
-  for (int i=0; i<MAX_LABLES; i++) ui.lables[i].owner = NO_OWNER;
-  for (int i=0; i<MAX_IMAGES; i++) ui.images[i].owner = NO_OWNER;
+  init_ui_components(&ui);
 
   button_t start_button =
     create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 85, 10, 5, RAYWHITE, BLACK, "START GAME", start_click_start);
@@ -210,29 +215,22 @@ ui_t* init_start_ui(){
 }
 
 
-ui_t* init_game_ui() {
+ui_t* init_game_ui(void) {
   ui_t ui = {
     .owner = GAME,
   };
 
+  init_ui_components(&ui);
   game_ui = ui;
-
-  // set all button owner to -1 (no owner)
-  for (int i=0; i<MAX_BUTTONS; i++) ui.buttons[i].owner = NO_OWNER;
-  for (int i=0; i<MAX_LABLES; i++) ui.lables[i].owner = NO_OWNER;
-  for (int i=0; i<MAX_IMAGES; i++) ui.images[i].owner = NO_OWNER;
-
   return &game_ui;
 }
 
-ui_t* init_options_ui() {
+ui_t* init_options_ui(void) {
   ui_t ui = {
     .owner = OPTIONS_UI,
   };
 
-  for (int i=0; i<MAX_BUTTONS; i++) ui.buttons[i].owner = NO_OWNER;
-  for (int i=0; i<MAX_LABLES; i++) ui.lables[i].owner = NO_OWNER;
-  for (int i=0; i<MAX_IMAGES; i++) ui.images[i].owner = NO_OWNER;
+  init_ui_components(&ui);
   button_t back_button =
     create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 85, 10, 5, RAYWHITE, BLACK, "BACK", back_click_options);
   back_button.owner = OPTIONS_UI;
@@ -243,15 +241,29 @@ ui_t* init_options_ui() {
   return &options_ui;
 }
 
+
+ui_t* init_combat_ui(void) {
+  ui_t ui = {
+    .owner = COMBAT_UI,
+  };
+
+  init_ui_components(&ui);
+
+  combat_ui = ui;
+
+  return &combat_ui;
+}
+
+
 void start_click_start( gamestate* state ) {
-  unload_current_ui(state);
+  unload_ui(state->active_ui);
   state->ui_state = GAME;
   state->active_ui = init_game_ui();
 }
 
 // Not impl yet
 void options_click_start(gamestate * state) {
-  unload_current_ui(state);
+  unload_ui(state->active_ui);
   state->ui_state=OPTIONS_UI;
   state->active_ui = init_options_ui();
  }
