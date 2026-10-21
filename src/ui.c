@@ -262,13 +262,13 @@ void start_click_start( gamestate* state ) {
 }
 
 // Not impl yet
-void options_click_start(gamestate * state) {
+void options_click_start(gamestate* state) {
   unload_ui(state->active_ui);
   state->ui_state=OPTIONS_UI;
   state->active_ui = init_options_ui();
  }
 
-void back_click_options(gamestate *state) {
+void back_click_options(gamestate* state) {
    state->ui_state = START_UI;
    // blat textures blat unload ui too 
    state->active_ui = init_start_ui();
