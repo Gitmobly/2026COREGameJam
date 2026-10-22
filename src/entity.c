@@ -33,7 +33,7 @@ void entity_interactions(gamestate* state)
 			}
 			if (ents[i]->type == E_MONSTER)
 			{
-				entity_monster_interact(ents[i], ents[j], room);
+				entity_monster_interact(ents[i], ents[j], state);
 			}
 		}
 		if (ents[i]->type == E_PROJECTILE)
@@ -46,7 +46,7 @@ void entity_interactions(gamestate* state)
 		}
 		if (ents[i]->type == E_MONSTER)
 		{
-			entity_monster_interact(ents[i], NULL, room);
+			entity_monster_interact(ents[i], NULL, state);
 		}
 	}
 

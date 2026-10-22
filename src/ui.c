@@ -243,12 +243,13 @@ ui_t* init_options_ui(void) {
 }
 
 
-ui_t* init_combat_ui(entity_t* entity) {
+ui_t* init_comabat_ui(entity_t *entity) {
   ui_t ui = {
     .owner = COMBAT_UI,
   };
 
   init_ui_components(&ui);
+  (void) entity;
 
   combat_ui = ui;
 

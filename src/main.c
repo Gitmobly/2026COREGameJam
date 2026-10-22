@@ -39,7 +39,7 @@ int main(void)
 
 		if(state.ui_state == GAME) {
 			// Pause entity interactions if ui switches
-			entity_interactions(room);
+			entity_interactions(&state);
 		}
 	}
 
