@@ -5,9 +5,11 @@
 
 #include "entity.h"
 #include "map.h"
+#include "gamestate.h"
 
-void entity_interactions(map_room_t* room)
+void entity_interactions(gamestate* state)
 {
+	map_room_t* room = state->active_room;
 	entity_t** ents = room->entities;
 	for (int i = 0; i < MAP_ENTITY_MAX; i++)
 	{

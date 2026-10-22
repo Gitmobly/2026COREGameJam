@@ -1,6 +1,7 @@
 #ifndef GAMEUI
 #define GAMEUI
 
+#include "entity.h"
 #include "gamestate.h"
 #include "vendor/raylib/raylib.h"
 #include <inttypes.h>
@@ -146,7 +147,7 @@ void options_click_start( gamestate* state);
 ui_t* init_options_ui ( void );
 void back_click_options( gamestate* state );
 
-ui_t* init_comabat_ui ( void );
+ui_t* init_comabat_ui ( entity_t* entity );
 
 
 

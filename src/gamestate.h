@@ -19,7 +19,7 @@ typedef enum {
 
 
 // game values/flags
-typedef struct {
+typedef struct gamestate {
   /*
     Flag for ui render switching
     PS: If switching from start to game should init game first or switching from game to

@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "entity.h"
 #include "gamestate.h"
 #include "graphics.h"
 #include "vendor/raylib/raylib.h"
@@ -242,7 +243,7 @@ ui_t* init_options_ui(void) {
 }
 
 
-ui_t* init_combat_ui(void) {
+ui_t* init_combat_ui(entity_t* entity) {
   ui_t ui = {
     .owner = COMBAT_UI,
   };
