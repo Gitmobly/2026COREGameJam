@@ -10,7 +10,7 @@
 #define MAX_LABLES 64
 #define MAX_IMAGES 16
 
-#define PAD_MASK 0xFF
+#define PAD_MASK 0xFFF
 #define MUTE(c) ((c > 30) ? c - 30 : c + 30)
 #define UNMUTE(c) ((c > 30) ? c + 30 : c - 30)
 
@@ -25,15 +25,15 @@
 * Also could be defines but meh zig brain
 *
 * This also lets us pad/add offset to button e.g. POS_AXIS | 25
-* Max is 255 or 0xFF
+* Max is 4095 or 0xFFF
 *
 * Also before anyone says "i might put this number in by accident"
-* Please ask yourself why you are putting a button at x|y 4,294,967,040
+* Please ask yourself why you are putting a button at x|y 268431360
 */
 typedef enum {
-  CENTER_AXIS = 0xFFFF00,
-  NEG_AXIS = 0xFF0000,
-  POS_AXIS = 0x00FF00,
+  CENTER_AXIS = 0xFFFF000,
+  NEG_AXIS = 0xFF00000,
+  POS_AXIS = 0x00FF000,
 } ANCHOR_POS;
 
 /*
@@ -119,7 +119,13 @@ inline static void draw_image(image_t* image){
 */
 button_t create_button(unsigned int x, unsigned int y, int w, int h, Color bg, Color fg, const char* text, void (*click)(gamestate*));
 
+void reframe_button(button_t* button);
+
+// todo impl add functions, i.e. add button add lable
+
 lable_t create_lable(unsigned int x, unsigned int y, const char* text, Color fg, float fontSize, Font font);
+
+void update_lable(lable_t* lable);
 
 image_t create_image(Rectangle rect, Rectangle texture_pos, Texture2D texture, unsigned int rot);
 
@@ -133,7 +139,7 @@ Vector2 calculate_axis_pos_rec(Rectangle rect);
 
 void unload_ui( ui_t* ui );
 void render_current_ui ( ui_t* ui );
-void init_ui_components (ui_t* ui );
+void init_ui_components ( ui_t* ui );
 
 
 ui_t* init_game_ui( void );
@@ -147,7 +153,9 @@ void options_click_start( gamestate* state);
 ui_t* init_options_ui ( void );
 void back_click_options( gamestate* state );
 
-ui_t* init_comabat_ui ( entity_t* entity );
+ui_t* init_comabat_ui ( entity_t* entity, gamestate* state );
+void attack_click_combat( gamestate* state );
+void skills_click_combat( gamestate* state );
 
 
 

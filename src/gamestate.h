@@ -30,6 +30,8 @@ typedef struct gamestate {
   /* Current Active Room/lvl */
   map_room_t* active_room; 
   struct ui_t* active_ui;
+  entity_t* player;
+  entity_t* active_interaction;
 
 } gamestate; 
 

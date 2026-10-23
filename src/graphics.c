@@ -60,8 +60,13 @@ void draw_options_ui(gamestate* state) {
 
 
 void draw_combat_ui(gamestate *state, entity_t *entity) {
-	(void) state;
 	(void) entity;
+
+	// todo render combat ui
+	DrawRectangle(PAD, SCREEN_HT - 100 - PAD , SCREEN_WD - (PAD*2), 100, LIGHTGRAY);
+	DrawRectangle(PAD + 130, SCREEN_HT - 100 - PAD , 10, 100, BLACK);
+	DrawRectangle(PAD + 500, SCREEN_HT - 100 - PAD , 10, 100, BLACK);
+	render_current_ui(state->active_ui);
 }
 
 void draw_game(gamestate *state){

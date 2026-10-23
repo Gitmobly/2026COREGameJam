@@ -30,6 +30,7 @@ int main(void)
 		.ui_state = START_UI,
 		.active_room = room,
 		.active_ui = start,
+		.player = player,
 	};
 
 	while (!WindowShouldClose())

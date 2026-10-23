@@ -40,12 +40,11 @@ void entity_monster_interact(entity_t* mon, entity_t* other, gamestate* gamestat
 		if (mon_d < 24)
 		{
 			//other->hp -= 10;
-
-			gamestate->ui_state = COMBAT_UI;
-			gamestate->active_ui = init_comabat_ui(mon);
-
 			mon->pos[0] -= mon->vel[0] * 8;
 			mon->pos[1] -= mon->vel[1] * 8;
+			gamestate->ui_state = COMBAT_UI;
+			gamestate->active_ui = init_comabat_ui(mon, gamestate);
+			gamestate->active_interaction = mon;
 		}
 	}
 }

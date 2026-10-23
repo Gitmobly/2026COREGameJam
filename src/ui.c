@@ -1,5 +1,6 @@
 #include "ui.h"
 #include "entity.h"
+#include "actions.h"
 #include "gamestate.h"
 #include "graphics.h"
 #include "vendor/raylib/raylib.h"
@@ -29,15 +30,22 @@ button_t create_button(unsigned int x, unsigned int y, int w, int h, Color bg, C
     .button_muted = false,
   };
 
-  Vector2 textSize = MeasureTextEx(button.font, button.text, button.font_size, button.font_size*.1f);
+  reframe_button(&button);
+
+  return button;
+}
+
+
+void reframe_button(button_t *button){
+  Vector2 textSize = MeasureTextEx(button->font, button->text, button->font_size, button->font_size*.1f);
 
   
   Vector2 buttonSize = (Vector2) {
-    button.w+textSize.x,
-    button.h+textSize.y,
+    button->w+textSize.x,
+    button->h+textSize.y,
   };
 
-  Vector2 axisPos = calculate_axis_pos(button.x, button.y, buttonSize);
+  Vector2 axisPos = calculate_axis_pos(button->x, button->y, buttonSize);
 
 
   Vector2 textPos = (Vector2) {
@@ -47,12 +55,10 @@ button_t create_button(unsigned int x, unsigned int y, int w, int h, Color bg, C
 
   Rectangle rect = {axisPos.x, axisPos.y, buttonSize.x, buttonSize.y};
 
-  button.rect = rect;
-  button.textPos = textPos;
-  button.x = (int) axisPos.x;
-  button.y = (int) axisPos.y;
-
-  return button;
+  button->rect = rect;
+  button->textPos = textPos;
+  button->x = (int) axisPos.x;
+  button->y = (int) axisPos.y;
 }
 
 lable_t create_lable(unsigned int x, unsigned int y, const char *text, Color fg, float fontSize, Font font) {
@@ -65,13 +71,17 @@ lable_t create_lable(unsigned int x, unsigned int y, const char *text, Color fg,
     .text = text,
   };
   
-  Vector2 textSize = MeasureTextEx(lable.font, lable.text, lable.font_size, lable.font_size*.1f);
-
-  Vector2 axisPos = calculate_axis_pos(lable.x, lable.y, textSize);
-  lable.x = axisPos.x;
-  lable.y = axisPos.y;
+  update_lable(&lable);
 
   return lable;
+}
+
+void update_lable(lable_t *lable) {
+  Vector2 textSize = MeasureTextEx(lable->font, lable->text, lable->font_size, lable->font_size*.1f);
+
+  Vector2 axisPos = calculate_axis_pos(lable->x, lable->y, textSize);
+  lable->x = axisPos.x;
+  lable->y = axisPos.y;
 }
 
 image_t create_image(Rectangle rect, Rectangle texture_pos, Texture2D texture, unsigned int rot){
@@ -203,8 +213,6 @@ ui_t* init_start_ui(void){
   image_t image = create_image(pos, text_pos, texture, 0);
   image.owner = START_UI;
 
-  
-
   ui.buttons[0] = start_button;
   ui.buttons[1] = options_button;
   ui.lables[0] = lable;
@@ -242,21 +250,6 @@ ui_t* init_options_ui(void) {
   return &options_ui;
 }
 
-
-ui_t* init_comabat_ui(entity_t *entity) {
-  ui_t ui = {
-    .owner = COMBAT_UI,
-  };
-
-  init_ui_components(&ui);
-  (void) entity;
-
-  combat_ui = ui;
-
-  return &combat_ui;
-}
-
-
 void start_click_start( gamestate* state ) {
   unload_ui(state->active_ui);
   state->ui_state = GAME;
@@ -268,12 +261,76 @@ void options_click_start(gamestate* state) {
   unload_ui(state->active_ui);
   state->ui_state=OPTIONS_UI;
   state->active_ui = init_options_ui();
- }
+}
 
 void back_click_options(gamestate* state) {
    state->ui_state = START_UI;
    // blat textures blat unload ui too 
    state->active_ui = init_start_ui();
- }
+}
 
 
+ui_t* init_comabat_ui(entity_t *entity, gamestate* state) {
+  ui_t ui = {
+    .owner = COMBAT_UI,
+  };
+
+  init_ui_components(&ui);
+  (void) entity;
+
+  button_t attack = create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 85, 10, 5, GRAY, RED, "Attacks", attack_click_combat);
+  attack.font_size = 22;
+  attack.owner = COMBAT_UI;
+  reframe_button(&attack);
+
+  button_t skills = create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 120, 10, 5, GRAY, BLUE, "Skills", skills_click_combat);
+  skills.font_size = 22;
+  skills.owner = COMBAT_UI;
+  reframe_button(&skills);
+
+  ui.buttons[0] = attack;
+  ui.buttons[1] = skills;
+
+  // TODO event that updates this when player takes dmg
+  const char* player_hp_str = TextFormat("PLAYER'S HP : %d", state->player->hp);
+  lable_t player_hp = create_lable(PAD_COMP(POS_AXIS, 50), SCREEN_HT - 120, player_hp_str, BLUE, 22, GetFontDefault());
+  const char* entity_hp_str = TextFormat("%s HP : %d", "ENEMY'S", state->player->hp);
+  lable_t ent_hp = create_lable(PAD_COMP(POS_AXIS, 50), SCREEN_HT - 85, entity_hp_str, RED, 22, GetFontDefault());
+
+  ui.lables[0] = player_hp;
+  ui.lables[1] = ent_hp;
+  
+  combat_ui = ui;
+  return &combat_ui;
+}
+
+void attack_click_combat(gamestate *state) {
+  if(state->ui_state != COMBAT_UI) return;
+  state->active_ui->buttons[MAX_BUTTONS - 1].owner = NO_OWNER; 
+  state->active_ui->buttons[MAX_BUTTONS - 2].owner = NO_OWNER; 
+
+  button_t punch = create_button(PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 120, 10, 5, GRAY, RED, "Punch", combat_player_punch);
+  punch.font_size = 22;
+  punch.owner = COMBAT_UI;
+  reframe_button(&punch);
+
+  button_t kick = create_button(PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 85, 10, 5, GRAY, RED, "Kick", combat_player_kick);
+  kick.font_size = 22;
+  kick.owner = COMBAT_UI;
+  reframe_button(&kick);
+
+  state->active_ui->buttons[MAX_BUTTONS - 1] = punch; 
+  state->active_ui->buttons[MAX_BUTTONS - 2] = kick; 
+}
+
+void skills_click_combat(gamestate *state) {
+  if(state->ui_state != COMBAT_UI) return;
+  state->active_ui->buttons[MAX_BUTTONS - 1].owner = NO_OWNER; 
+  state->active_ui->buttons[MAX_BUTTONS - 2].owner = NO_OWNER; 
+
+  button_t sm_heal = create_button(PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 85, 10, 5, GRAY, BLUE, "Small Heal", skill_player_smheal);
+  sm_heal.font_size = 22;
+  sm_heal.owner = COMBAT_UI;
+  reframe_button(&sm_heal);
+  state->active_ui->buttons[MAX_BUTTONS - 1] = sm_heal; 
+}
