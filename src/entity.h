@@ -5,6 +5,7 @@
 
 struct weapon_t;
 typedef struct map_room_t map_room_t;
+typedef struct gamestate gamestate;
 
 typedef enum
 {
@@ -25,10 +26,11 @@ typedef struct entity_t
 	struct weapon_t* weapon;
 } entity_t;
 
+
 entity_t* entity_player_init(arena_t* arena);
 entity_t* entity_init_monster(arena_t* arena);
-void	  entity_interactions(map_room_t* room);
+void	  entity_interactions(gamestate* state);
 
 void entity_projectile_interact(entity_t* proj, entity_t* other, map_room_t* room);
 void entity_player_interact(entity_t* player, entity_t* other, map_room_t* room);
-void entity_monster_interact(entity_t* mon, entity_t* other, map_room_t* room);
+void entity_monster_interact(entity_t* mon, entity_t* other, gamestate* gamestate);

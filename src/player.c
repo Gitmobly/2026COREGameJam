@@ -27,7 +27,7 @@ void entity_player_interact(entity_t* player, entity_t* other, map_room_t* room)
 	(void)other;
 	if (other == NULL)
 	{
-		input_state_t inp = input_update();
+		input_state_t inp = input_update_entity();
 		player->vel[0]	  = player->speed * inp.move[0];
 		player->vel[1]	  = player->speed * inp.move[1];
 

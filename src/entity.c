@@ -5,9 +5,11 @@
 
 #include "entity.h"
 #include "map.h"
+#include "gamestate.h"
 
-void entity_interactions(map_room_t* room)
+void entity_interactions(gamestate* state)
 {
+	map_room_t* room = state->active_room;
 	entity_t** ents = room->entities;
 	for (int i = 0; i < MAP_ENTITY_MAX; i++)
 	{
@@ -31,7 +33,7 @@ void entity_interactions(map_room_t* room)
 			}
 			if (ents[i]->type == E_MONSTER)
 			{
-				entity_monster_interact(ents[i], ents[j], room);
+				entity_monster_interact(ents[i], ents[j], state);
 			}
 		}
 		if (ents[i]->type == E_PROJECTILE)
@@ -44,7 +46,7 @@ void entity_interactions(map_room_t* room)
 		}
 		if (ents[i]->type == E_MONSTER)
 		{
-			entity_monster_interact(ents[i], NULL, room);
+			entity_monster_interact(ents[i], NULL, state);
 		}
 	}
 

@@ -1,11 +1,13 @@
+#include "input.h"
 #include "vendor/raylib/raylib.h"
-#include <math.h>
 
 #include "graphics.h"
 #include "map.h"
 #include "entity.h"
 #include "weapon.h"
 #include "arena.h"
+#include "gamestate.h"
+#include "ui.h"
 
 int main(void)
 {
@@ -22,10 +24,24 @@ int main(void)
 	room->entities[0] = player;
 	room->entities[1] = monster;
 
+	ui_t* start = init_start_ui();
+	
+	gamestate state = {
+		.ui_state = START_UI,
+		.active_room = room,
+		.active_ui = start,
+		.player = player,
+	};
+
 	while (!WindowShouldClose())
 	{
-		graphics_loop(room);
-		entity_interactions(room);
+		graphics_loop(&state);
+		input_update_ui(&state);
+
+		if(state.ui_state == GAME) {
+			// Pause entity interactions if ui switches
+			entity_interactions(&state);
+		}
 	}
 
 	CloseWindow();

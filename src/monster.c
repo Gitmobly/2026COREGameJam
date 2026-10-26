@@ -4,6 +4,8 @@
 
 #include "arena.h"
 #include "entity.h"
+#include "gamestate.h"
+#include "ui.h"
 
 char* monster_name = "jeb_";
 
@@ -19,9 +21,8 @@ entity_t* entity_init_monster(arena_t* arena)
 	return mon;
 }
 
-void entity_monster_interact(entity_t* mon, entity_t* other, map_room_t* room)
+void entity_monster_interact(entity_t* mon, entity_t* other, gamestate* gamestate)
 {
-	(void)room;
 	if (other == NULL)
 	{
 		return;
@@ -38,9 +39,12 @@ void entity_monster_interact(entity_t* mon, entity_t* other, map_room_t* room)
 
 		if (mon_d < 24)
 		{
-			other->hp -= 10;
+			//other->hp -= 10;
 			mon->pos[0] -= mon->vel[0] * 8;
 			mon->pos[1] -= mon->vel[1] * 8;
+			gamestate->ui_state = COMBAT_UI;
+			gamestate->active_ui = init_comabat_ui(mon, gamestate);
+			gamestate->active_interaction = mon;
 		}
 	}
 }
