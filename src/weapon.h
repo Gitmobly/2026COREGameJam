@@ -1,17 +1,19 @@
 #pragma once
 
-#include "arena.h"
-#include "entity.h"
-#include "map.h"
+#include "utils.h"
+#include "vendor/raylib/raylib.h"
 
-typedef struct weapon_t
+typedef struct entity_t	  entity_t;
+typedef struct map_room_t map_room_t;
+
+typedef struct
 {
-	f64 fire_rate;
-	f64 damage;
-	f64 speed;
+	f32 fire_rate;
+	f32 damage;
+	f32 speed;
 	f64 fire_last;
 } weapon_t;
 
-void weapon_fire(entity_t* ent, map_room_t* room, int dir[2]);
+void weapon_fire(entity_t* ent, map_room_t* room, Vector2 dir);
 
-weapon_t* weapon_init_base(arena_t* arena);
+weapon_t weapon_init_base();

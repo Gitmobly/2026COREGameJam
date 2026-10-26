@@ -1,9 +1,5 @@
 #pragma once
 
-#include "entity.h"
-#include "map.h"
-#include "gamestate.h"
-
 #define SCREEN_WD		  800
 #define SCREEN_HT		  600
 #define CENTER_X		  (SCREEN_WD / 2.0f)
@@ -13,9 +9,10 @@
 
 #define PAD 32
 
-void graphics_init(void);
-void graphics_loop(gamestate* state);
-void draw_start_ui(gamestate* state);
-void draw_options_ui(gamestate* state);
-void draw_combat_ui(gamestate* state, entity_t* entity);
-void draw_game(gamestate* state);
+typedef struct app_state_t	app_state_t;
+typedef struct game_state_t game_state_t;
+typedef struct ui_state_t	ui_state_t;
+
+void render(app_state_t* app);
+void draw_game(game_state_t* state);
+void draw_combat_ui(ui_state_t* state);

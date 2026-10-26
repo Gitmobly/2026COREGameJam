@@ -33,6 +33,7 @@ typedef struct allocators_t
 	arena_t* permanent;
 	arena_t* level;
 	arena_t* scratch;
+	arena_t* ui;
 } allocators_t;
 
 typedef enum arena_flags

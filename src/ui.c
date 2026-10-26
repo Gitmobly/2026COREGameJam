@@ -1,19 +1,20 @@
 #include "ui.h"
-#include "entity.h"
-#include "actions.h"
-#include "gamestate.h"
+#include "arena.h"
 #include "graphics.h"
+#include "game.h"
+#include "entity.h"
+#include "main.h"
+#include "actions.h"
 #include "vendor/raylib/raylib.h"
 #include "vendor/raylib/raymath.h"
 
 // Should move this to a ui manager or something but for the sake of time just keeping them here
-ui_t start_ui;
 ui_t game_ui;
 ui_t options_ui;
 ui_t combat_ui;
 
 button_t create_button(unsigned int x, unsigned int y, int w, int h, Color bg, Color fg, const char* text,
-					   void (*click)(gamestate*))
+					   void (*click)(app_state_t*))
 {
 	button_t button = {
 		.x			  = x,
@@ -155,7 +156,7 @@ Vector2 calculate_axis_pos_rec(Rectangle rect)
 	return calculate_axis_pos((unsigned int)rect.x, (unsigned int)rect.y, (Vector2){rect.width, rect.height});
 }
 
-void render_current_ui(ui_t* ui)
+void render_ui(ui_t* ui)
 {
 	for (int i = 0; i < MAX_BUTTONS; i++)
 	{
@@ -216,13 +217,18 @@ void init_ui_components(ui_t* ui)
 	}
 }
 
-ui_t* init_start_ui(void)
+void ui_state_init(ui_state_t* ui_state, allocators_t* allocators)
 {
-	ui_t ui = {
-		.owner = START_UI,
-	};
+	ui_state->allocators = allocators;
+	ui_state->current_ui = build_start_ui(allocators);
+}
 
-	init_ui_components(&ui);
+ui_t* build_start_ui(allocators_t* allocators)
+{
+	ui_t* ui   = arena_push_struct(allocators->ui, ui_t);
+	ui->screen = START_UI;
+
+	init_ui_components(ui);
 
 	button_t start_button =
 		create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 85, 10, 5, RAYWHITE, BLACK, "START GAME", start_click_start);
@@ -242,20 +248,18 @@ ui_t* init_start_ui(void)
 	image_t image = create_image(pos, text_pos, texture, 0);
 	image.owner	  = START_UI;
 
-	ui.buttons[0] = start_button;
-	ui.buttons[1] = options_button;
-	ui.labels[0]  = label;
-	ui.images[0]  = image;
+	ui->buttons[0] = start_button;
+	ui->buttons[1] = options_button;
+	ui->labels[0]  = label;
+	ui->images[0]  = image;
 
-	start_ui = ui;
-
-	return &start_ui;
+	return ui;
 }
 
 ui_t* init_game_ui(void)
 {
 	ui_t ui = {
-		.owner = GAME,
+		.screen = GAME,
 	};
 
 	init_ui_components(&ui);
@@ -266,7 +270,7 @@ ui_t* init_game_ui(void)
 ui_t* init_options_ui(void)
 {
 	ui_t ui = {
-		.owner = OPTIONS_UI,
+		.screen = OPTIONS_UI,
 	};
 
 	init_ui_components(&ui);
@@ -280,32 +284,35 @@ ui_t* init_options_ui(void)
 	return &options_ui;
 }
 
-void start_click_start(gamestate* state)
+void start_click_start(app_state_t* app)
 {
-	unload_ui(state->active_ui);
-	state->ui_state	 = GAME;
-	state->active_ui = init_game_ui();
+	ui_state_t* ui = app->ui_state;
+
+	unload_ui(ui->current_ui);
+	ui->current_ui = init_game_ui();
 }
 
 // Not impl yet
-void options_click_start(gamestate* state)
+void options_click_start(app_state_t* state)
 {
-	unload_ui(state->active_ui);
-	state->ui_state	 = OPTIONS_UI;
-	state->active_ui = init_options_ui();
+	ui_state_t* ui_state = state->ui_state;
+
+	unload_ui(ui_state->current_ui);
+	ui_state->current_ui = init_options_ui();
 }
 
-void back_click_options(gamestate* state)
+void back_click_options(app_state_t* state)
 {
-	state->ui_state = START_UI;
+	state->ui_state->current_ui->screen = START_UI;
 	// blat textures blat unload ui too
-	state->active_ui = init_start_ui();
+	unload_ui(state->ui_state->current_ui);
+	state->ui_state->current_ui = build_start_ui(state->ui_state->allocators);
 }
 
-ui_t* init_comabat_ui(entity_t* entity, gamestate* state)
+ui_t* init_comabat_ui(entity_t* entity, app_state_t* state)
 {
 	ui_t ui = {
-		.owner = COMBAT_UI,
+		.screen = COMBAT_UI,
 	};
 
 	init_ui_components(&ui);
@@ -327,10 +334,10 @@ ui_t* init_comabat_ui(entity_t* entity, gamestate* state)
 	ui.buttons[1] = skills;
 
 	// TODO event that updates this when player takes dmg
-	const char* player_hp_str = TextFormat("PLAYER'S HP : %d", state->player->hp);
+	const char* player_hp_str = TextFormat("PLAYER'S HP : %d", state->game_state->current_level.player_entity->hp);
 	label_t		player_hp =
 		create_label(PAD_COMP(POS_AXIS, 50), SCREEN_HT - 120, player_hp_str, BLUE, 22, GetFontDefault());
-	const char* entity_hp_str = TextFormat("%s HP : %d", "ENEMY'S", state->player->hp);
+	const char* entity_hp_str = TextFormat("%s HP : %d", "ENEMY'S", state->game_state->current_level.player_entity->hp);
 	label_t		ent_hp = create_label(PAD_COMP(POS_AXIS, 50), SCREEN_HT - 85, entity_hp_str, RED, 22, GetFontDefault());
 
 	ui.labels[0] = player_hp;
@@ -340,14 +347,14 @@ ui_t* init_comabat_ui(entity_t* entity, gamestate* state)
 	return &combat_ui;
 }
 
-void attack_click_combat(gamestate* state)
+void attack_click_combat(app_state_t* state)
 {
-	if (state->ui_state != COMBAT_UI)
+	if (state->ui_state->current_ui->screen != COMBAT_UI)
 	{
 		return;
 	}
-	state->active_ui->buttons[MAX_BUTTONS - 1].owner = NO_OWNER;
-	state->active_ui->buttons[MAX_BUTTONS - 2].owner = NO_OWNER;
+	state->ui_state->current_ui->buttons[MAX_BUTTONS - 1].owner = NO_OWNER;
+	state->ui_state->current_ui->buttons[MAX_BUTTONS - 2].owner = NO_OWNER;
 
 	button_t punch =
 		create_button(PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 120, 10, 5, GRAY, RED, "Punch", combat_player_punch);
@@ -361,23 +368,23 @@ void attack_click_combat(gamestate* state)
 	kick.owner	   = COMBAT_UI;
 	reframe_button(&kick);
 
-	state->active_ui->buttons[MAX_BUTTONS - 1] = punch;
-	state->active_ui->buttons[MAX_BUTTONS - 2] = kick;
+	state->ui_state->current_ui->buttons[MAX_BUTTONS - 1] = punch;
+	state->ui_state->current_ui->buttons[MAX_BUTTONS - 2] = kick;
 }
 
-void skills_click_combat(gamestate* state)
+void skills_click_combat(app_state_t* state)
 {
-	if (state->ui_state != COMBAT_UI)
+	if (state->ui_state->current_ui->screen != COMBAT_UI)
 	{
 		return;
 	}
-	state->active_ui->buttons[MAX_BUTTONS - 1].owner = NO_OWNER;
-	state->active_ui->buttons[MAX_BUTTONS - 2].owner = NO_OWNER;
+	state->ui_state->current_ui->buttons[MAX_BUTTONS - 1].owner = NO_OWNER;
+	state->ui_state->current_ui->buttons[MAX_BUTTONS - 2].owner = NO_OWNER;
 
 	button_t sm_heal =
 		create_button(PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 85, 10, 5, GRAY, BLUE, "Small Heal", skill_player_smheal);
 	sm_heal.font_size = 22;
 	sm_heal.owner	  = COMBAT_UI;
 	reframe_button(&sm_heal);
-	state->active_ui->buttons[MAX_BUTTONS - 1] = sm_heal;
+	state->ui_state->current_ui->buttons[MAX_BUTTONS - 1] = sm_heal;
 }

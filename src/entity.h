@@ -2,10 +2,12 @@
 
 #include "utils.h"
 #include "arena.h"
+#include "weapon.h"
+#include "vendor/raylib/raylib.h"
 
-struct weapon_t;
-typedef struct map_room_t map_room_t;
-typedef struct gamestate gamestate;
+typedef struct map_room_t	 map_room_t;
+typedef struct level_state_t level_state_t;
+typedef struct app_state_t	 app_state_t;
 
 typedef enum
 {
@@ -17,20 +19,17 @@ typedef enum
 
 typedef struct entity_t
 {
-	f64				 pos[2];
-	f64				 vel[2];
-	f32				 speed;
-	s32				 hp;
-	char*			 name;
-	entity_type_t	 type;
-	struct weapon_t* weapon;
+	Vector2		  pos;
+	Vector2		  vel;
+	f32			  speed;
+	s32			  hp;
+	char*		  name;
+	entity_type_t type;
+	weapon_t	  weapon;
 } entity_t;
-
 
 entity_t* entity_player_init(arena_t* arena);
 entity_t* entity_init_monster(arena_t* arena);
-void	  entity_interactions(gamestate* state);
+void	  entity_interactions(app_state_t* app);
 
-void entity_projectile_interact(entity_t* proj, entity_t* other, map_room_t* room);
 void entity_player_interact(entity_t* player, entity_t* other, map_room_t* room);
-void entity_monster_interact(entity_t* mon, entity_t* other, gamestate* gamestate);

@@ -1,10 +1,9 @@
 #ifndef GAMEUI
 #define GAMEUI
 
-#include "entity.h"
-#include "gamestate.h"
 #include "vendor/raylib/raylib.h"
 #include <inttypes.h>
+#include "utils.h"
 
 #define MAX_BUTTONS 32
 #define MAX_LABELS	64
@@ -18,6 +17,10 @@
  * Macro to pad out componets anchor pos
  */
 #define PAD_COMP(anchor, offset) (anchor | ((offset > PAD_MASK) ? 0 : offset))
+
+typedef struct app_state_t	app_state_t;
+typedef struct entity_t		entity_t;
+typedef struct allocators_t allocators_t;
 
 /*
  * ENUM to set x/y value to a anchored pos i.e. center, left, top, bottom, right
@@ -37,27 +40,36 @@ typedef enum
 	POS_AXIS	= 0x00FF000,
 } ANCHOR_POS;
 
+typedef enum
+{
+	NO_OWNER   = -1,
+	START_UI   = 0,
+	GAME	   = 1,
+	COMBAT_UI  = 2,
+	OPTIONS_UI = 3,
+} ui_screen_t;
+
 /*
  * button struct font size and font are set by def atm
  */
 typedef struct button_t
 {
-	unsigned int x, y, w, h;
-	UI_STATE	 owner;
-	Color		 bg, fg;
-	float		 font_size;
-	Rectangle	 rect;
-	Vector2		 textPos;
-	Font		 font;
-	const char*	 text;
-	void (*click)(gamestate*);
+	u32			x, y, w, h;
+	ui_screen_t owner;
+	Color		bg, fg;
+	float		font_size;
+	Rectangle	rect;
+	Vector2		textPos;
+	Font		font;
+	const char* text;
+	void (*click)(app_state_t*);
 	bool button_muted;
 } button_t;
 
 typedef struct label_t
 {
 	unsigned int x, y;
-	UI_STATE	 owner;
+	ui_screen_t	 owner;
 	Color		 fg;
 	float		 font_size;
 	Font		 font;
@@ -66,7 +78,7 @@ typedef struct label_t
 
 typedef struct image_t
 {
-	UI_STATE	 owner;
+	ui_screen_t	 owner;
 	unsigned int rot;
 	Rectangle	 pos;
 	Rectangle	 texture_pos;
@@ -78,11 +90,17 @@ typedef struct image_t
  */
 typedef struct ui_t
 {
-	UI_STATE owner;
-	button_t buttons[MAX_BUTTONS];
-	label_t	 labels[MAX_LABELS];
-	image_t	 images[MAX_IMAGES];
+	ui_screen_t screen;
+	button_t	buttons[MAX_BUTTONS];
+	label_t		labels[MAX_LABELS];
+	image_t		images[MAX_IMAGES];
 } ui_t;
+
+typedef struct ui_state_t
+{
+	ui_t*		  current_ui;
+	allocators_t* allocators;
+} ui_state_t;
 
 /*
  * Draws a button to the screen
@@ -128,7 +146,7 @@ inline static void draw_image(image_t* image)
  * Font size and font is set by default
  */
 button_t create_button(unsigned int x, unsigned int y, int w, int h, Color bg, Color fg, const char* text,
-					   void (*click)(gamestate*));
+					   void (*click)(app_state_t*));
 
 void reframe_button(button_t* button);
 
@@ -146,22 +164,22 @@ Vector2 calculate_axis_pos_rec(Rectangle rect);
 /* -- Function def  -- */
 
 void unload_ui(ui_t* ui);
-void render_current_ui(ui_t* ui);
+void render_ui(ui_t* ui);
 void init_ui_components(ui_t* ui);
 
-ui_t* init_game_ui(void);
+void ui_state_init(ui_state_t* ui_state, allocators_t* allocators);
 
 /* Start UI function */
-ui_t* init_start_ui(void);
-void  start_click_start(gamestate* state);
-void  options_click_start(gamestate* state);
+ui_t* build_start_ui(allocators_t* allocators);
+void  start_click_start(app_state_t* state);
+void  options_click_start(app_state_t* state);
 /* Start UI function */
 
 ui_t* init_options_ui(void);
-void  back_click_options(gamestate* state);
+void  back_click_options(app_state_t* state);
 
-ui_t* init_comabat_ui(entity_t* entity, gamestate* state);
-void  attack_click_combat(gamestate* state);
-void  skills_click_combat(gamestate* state);
+ui_t* init_comabat_ui(entity_t* entity, app_state_t* state);
+void  attack_click_combat(app_state_t* state);
+void  skills_click_combat(app_state_t* state);
 
 #endif

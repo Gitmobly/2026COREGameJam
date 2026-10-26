@@ -1,39 +1,39 @@
-#include <stdlib.h>
-#include <time.h>
 #include <limits.h>
 
 #include "weapon.h"
+#include "entity.h"
+#include "map.h"
+#include "vendor/raylib/raylib.h"
 
 char* str_projectile = "projectile";
 
-weapon_t* weapon_init_base(arena_t* arena)
+weapon_t weapon_init_base()
 {
-	weapon_t* base	= arena_push_struct(arena, weapon_t);
-	base->speed		= 8;
-	base->fire_rate = 1;
-	return base;
+	return (weapon_t){
+		.speed	   = 8.0,
+		.fire_rate = 1.0,
+		.damage	   = 10.0,
+		.fire_last = 0.0,
+	};
 }
 
-void weapon_fire(entity_t* ent, map_room_t* room, int dir[2])
+void weapon_fire(entity_t* ent, map_room_t* room, Vector2 dir)
 {
-	struct timespec ts;
-	timespec_get(&ts, TIME_UTC);
-	double now = (double)ts.tv_sec + (double)ts.tv_nsec / 1000000000;
-	if (now < ent->weapon->fire_rate + ent->weapon->fire_last)
+	f64 now = GetTime();
+	if (now - ent->weapon.fire_last < ent->weapon.fire_rate)
 	{
 		return;
 	}
-	ent->weapon->fire_last = now;
 
-	entity_t* projectile = malloc(sizeof(entity_t));
-	projectile->hp		 = INT_MAX;
-	projectile->pos[0]	 = ent->pos[0];
-	projectile->pos[1]	 = ent->pos[1];
-	projectile->type	 = E_PROJECTILE;
-	projectile->name	 = str_projectile;
-	projectile->vel[0]	 = dir[0] * ent->weapon->speed;
-	projectile->vel[1]	 = dir[1] * ent->weapon->speed;
+	ent->weapon.fire_last = now;
 
-	map_add_entity(projectile, room);
-	// free(projectile);
+	entity_t projectile = {
+		.hp	  = INT_MAX,
+		.pos  = ent->pos,
+		.vel  = {dir.x * ent->weapon.speed, dir.y * ent->weapon.speed},
+		.type = E_PROJECTILE,
+		.name = "projectile",
+	};
+
+	map_add_entity(&projectile, room);
 }
