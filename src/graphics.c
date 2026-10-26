@@ -6,7 +6,6 @@
 #include "graphics.h"
 #include "gamestate.h"
 
-
 Color get_color(entity_t* entity)
 {
 	return entity->type == E_MONSTER ? RED : SKYBLUE;
@@ -30,7 +29,8 @@ void graphics_loop(gamestate* state)
 
 	DrawRectangle(PAD, PAD, SCREEN_WD - (2 * PAD), SCREEN_HT - (2 * PAD), BLACK);
 
-	switch (state->ui_state) {
+	switch (state->ui_state)
+	{
 		case START_UI:
 			draw_start_ui(state);
 			break;
@@ -46,30 +46,32 @@ void graphics_loop(gamestate* state)
 			break;
 	}
 
-
 	EndDrawing();
 }
 
-void draw_start_ui(gamestate* state){
+void draw_start_ui(gamestate* state)
+{
 	render_current_ui(state->active_ui);
 }
 
-void draw_options_ui(gamestate* state) {
+void draw_options_ui(gamestate* state)
+{
 	render_current_ui(state->active_ui);
 }
 
-
-void draw_combat_ui(gamestate *state, entity_t *entity) {
-	(void) entity;
+void draw_combat_ui(gamestate* state, entity_t* entity)
+{
+	(void)entity;
 
 	// todo render combat ui
-	DrawRectangle(PAD, SCREEN_HT - 100 - PAD , SCREEN_WD - (PAD*2), 100, LIGHTGRAY);
-	DrawRectangle(PAD + 130, SCREEN_HT - 100 - PAD , 10, 100, BLACK);
-	DrawRectangle(PAD + 500, SCREEN_HT - 100 - PAD , 10, 100, BLACK);
+	DrawRectangle(PAD, SCREEN_HT - 100 - PAD, SCREEN_WD - (PAD * 2), 100, LIGHTGRAY);
+	DrawRectangle(PAD + 130, SCREEN_HT - 100 - PAD, 10, 100, BLACK);
+	DrawRectangle(PAD + 500, SCREEN_HT - 100 - PAD, 10, 100, BLACK);
 	render_current_ui(state->active_ui);
 }
 
-void draw_game(gamestate *state){
+void draw_game(gamestate* state)
+{
 	map_room_t* active_room = state->active_room;
 
 	for (int i = 0; i < 32; i++)

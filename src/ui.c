@@ -12,325 +12,372 @@ ui_t game_ui;
 ui_t options_ui;
 ui_t combat_ui;
 
+button_t create_button(unsigned int x, unsigned int y, int w, int h, Color bg, Color fg, const char* text,
+					   void (*click)(gamestate*))
+{
+	button_t button = {
+		.x			  = x,
+		.y			  = y,
+		.w			  = w,
+		.h			  = h,
+		.text		  = text,
+		.click		  = click,
+		.bg			  = bg,
+		.fg			  = fg,
+		.owner		  = START_UI,
+		.font		  = GetFontDefault(),
+		.font_size	  = 40.0,
+		.button_muted = false,
+	};
 
-button_t create_button(unsigned int x, unsigned int y, int w, int h, Color bg, Color fg, const char *text, void (*click)(gamestate*)) {
+	reframe_button(&button);
 
-  button_t button = {
-    .x = x,
-    .y = y,
-    .w = w,
-    .h = h,
-    .text = text,
-    .click = click,
-    .bg = bg,
-    .fg = fg,
-    .owner = START_UI,
-    .font = GetFontDefault(),
-    .font_size = 40.0,
-    .button_muted = false,
-  };
-
-  reframe_button(&button);
-
-  return button;
+	return button;
 }
 
+void reframe_button(button_t* button)
+{
+	Vector2 textSize = MeasureTextEx(button->font, button->text, button->font_size, button->font_size * .1f);
 
-void reframe_button(button_t *button){
-  Vector2 textSize = MeasureTextEx(button->font, button->text, button->font_size, button->font_size*.1f);
+	Vector2 buttonSize = (Vector2){
+		button->w + textSize.x,
+		button->h + textSize.y,
+	};
 
-  
-  Vector2 buttonSize = (Vector2) {
-    button->w+textSize.x,
-    button->h+textSize.y,
-  };
+	Vector2 axisPos = calculate_axis_pos(button->x, button->y, buttonSize);
 
-  Vector2 axisPos = calculate_axis_pos(button->x, button->y, buttonSize);
+	Vector2 textPos = (Vector2){
+		axisPos.x + Lerp(0.0f, buttonSize.x - textSize.x, (float)0.5),
+		axisPos.y + Lerp(0.0f, buttonSize.y - textSize.y, (float)0.5),
+	};
 
+	Rectangle rect = {axisPos.x, axisPos.y, buttonSize.x, buttonSize.y};
 
-  Vector2 textPos = (Vector2) {
-    axisPos.x + Lerp(0.0f, buttonSize.x - textSize.x, (float)0.5),
-    axisPos.y + Lerp(0.0f, buttonSize.y - textSize.y, (float)0.5),
-  };
-
-  Rectangle rect = {axisPos.x, axisPos.y, buttonSize.x, buttonSize.y};
-
-  button->rect = rect;
-  button->textPos = textPos;
-  button->x = (int) axisPos.x;
-  button->y = (int) axisPos.y;
+	button->rect	= rect;
+	button->textPos = textPos;
+	button->x		= (int)axisPos.x;
+	button->y		= (int)axisPos.y;
 }
 
-lable_t create_lable(unsigned int x, unsigned int y, const char *text, Color fg, float fontSize, Font font) {
-  lable_t lable = {
-    .x = x,
-    .y = y,
-    .fg = fg,
-    .font_size = fontSize,
-    .font = font,
-    .text = text,
-  };
-  
-  update_lable(&lable);
+label_t create_label(unsigned int x, unsigned int y, const char* text, Color fg, float fontSize, Font font)
+{
+	label_t label = {
+		.x		   = x,
+		.y		   = y,
+		.fg		   = fg,
+		.font_size = fontSize,
+		.font	   = font,
+		.text	   = text,
+	};
 
-  return lable;
+	update_label(&label);
+
+	return label;
 }
 
-void update_lable(lable_t *lable) {
-  Vector2 textSize = MeasureTextEx(lable->font, lable->text, lable->font_size, lable->font_size*.1f);
+void update_label(label_t* label)
+{
+	Vector2 textSize = MeasureTextEx(label->font, label->text, label->font_size, label->font_size * .1f);
 
-  Vector2 axisPos = calculate_axis_pos(lable->x, lable->y, textSize);
-  lable->x = axisPos.x;
-  lable->y = axisPos.y;
+	Vector2 axisPos = calculate_axis_pos(label->x, label->y, textSize);
+	label->x		= (s32)axisPos.x;
+	label->y		= (s32)axisPos.y;
 }
 
-image_t create_image(Rectangle rect, Rectangle texture_pos, Texture2D texture, unsigned int rot){
-  image_t image = {
-    .pos = rect,
-    .texture_pos = texture_pos,
-    .rot = rot,
-    .texture = texture,
-  };
+image_t create_image(Rectangle rect, Rectangle texture_pos, Texture2D texture, unsigned int rot)
+{
+	image_t image = {
+		.pos		 = rect,
+		.texture_pos = texture_pos,
+		.rot		 = rot,
+		.texture	 = texture,
+	};
 
-  Vector2 axisPos = calculate_axis_pos_rec(rect);
+	Vector2 axisPos = calculate_axis_pos_rec(rect);
 
-  image.pos.x = axisPos.x;
-  image.pos.y = axisPos.y;
+	image.pos.x = axisPos.x;
+	image.pos.y = axisPos.y;
 
-  return image;
+	return image;
 }
 
+Vector2 calculate_axis_pos(unsigned int x, unsigned int y, Vector2 widthHeight)
+{
+	Vector2		 ret = {(float)x, (float)y};
+	unsigned int xv	 = x;
+	unsigned int yv	 = y;
 
+	xv &= ~PAD_MASK;
+	yv &= ~PAD_MASK;
 
-Vector2 calculate_axis_pos(unsigned int x, unsigned int y, Vector2 widthHeight){
-  Vector2 ret = {(float)x, (float) y};
-  unsigned int xv = x;
-  unsigned int yv = y;
+	switch (xv)
+	{
+		case CENTER_AXIS:
+			ret.x = (float)COMP_CENTER_X(widthHeight.x);
+			break;
+		case POS_AXIS:
+			// padding
+			xv	  = (x & PAD_MASK);
+			ret.x = (float)(SCREEN_WD - (widthHeight.x + xv));
+			break;
+		case NEG_AXIS:
+			// padding
+			xv	  = (x & PAD_MASK);
+			ret.x = (float)(0 + xv);
+			break;
+		default:
+			break;
+	}
+	switch (yv)
+	{
+		case CENTER_AXIS:
+			ret.y = COMP_CENTER_Y(widthHeight.y);
+			break;
+		case POS_AXIS:
+			// padding
+			yv	  = (y & PAD_MASK);
+			ret.y = (float)(0 + yv);
+			break;
+		case NEG_AXIS:
+			// padding
+			yv	  = (y & PAD_MASK);
+			ret.y = (float)(SCREEN_HT - (widthHeight.y + yv));
+			break;
+		default:
+			break;
+	}
 
-  xv &= ~PAD_MASK;
-  yv &= ~PAD_MASK;
-
-  switch (xv) {
-    case CENTER_AXIS:
-      ret.x = (float) COMP_CENTER_X(widthHeight.x);
-      break;
-    case POS_AXIS:
-      // padding 
-      xv = (x & PAD_MASK);
-      ret.x = (float)(SCREEN_WD - (widthHeight.x + xv));
-      break;
-    case NEG_AXIS:
-      // padding
-      xv = (x & PAD_MASK);
-      ret.x = (float) (0 + xv);
-      break;
-    default:
-      break;
-  }
-  switch (yv) {
-    case CENTER_AXIS:
-      ret.y = COMP_CENTER_Y(widthHeight.y);
-      break;
-    case POS_AXIS:
-      // padding 
-      yv = (y & PAD_MASK);
-      ret.y = (float)(0 + yv);
-      break;
-    case NEG_AXIS:
-      // padding 
-      yv = (y & PAD_MASK);
-      ret.y = (float)(SCREEN_HT - (widthHeight.y + yv));
-      break;
-    default:
-      break;
-  }
-
-
-  return ret;
+	return ret;
 }
 
-Vector2 calculate_axis_pos_rec(Rectangle rect){
-  return calculate_axis_pos((unsigned int) rect.x, (unsigned int) rect.y, (Vector2) {rect.width, rect.height});
+Vector2 calculate_axis_pos_rec(Rectangle rect)
+{
+	return calculate_axis_pos((unsigned int)rect.x, (unsigned int)rect.y, (Vector2){rect.width, rect.height});
 }
 
-void render_current_ui(ui_t* ui) {
-  for (int i = 0; i < MAX_BUTTONS; i++) {
-    button_t b = ui->buttons[i];
-    if(b.owner == NO_OWNER) continue;
-    draw_button(&b);
-  }
-  for (int i = 0; i < MAX_LABLES; i++) {
-    lable_t l = ui->lables[i];
-    if(l.owner == NO_OWNER) continue;
-    draw_lable(&l);
-  }
-  for(int i = 0; i < MAX_IMAGES; i++) {
-    image_t im = ui->images[i];
-    if(im.owner == NO_OWNER) continue;
-    draw_image(&im);
-  }
+void render_current_ui(ui_t* ui)
+{
+	for (int i = 0; i < MAX_BUTTONS; i++)
+	{
+		button_t b = ui->buttons[i];
+		if (b.owner == NO_OWNER)
+		{
+			continue;
+		}
+		draw_button(&b);
+	}
+	for (int i = 0; i < MAX_LABELS; i++)
+	{
+		label_t l = ui->labels[i];
+		if (l.owner == NO_OWNER)
+		{
+			continue;
+		}
+		draw_label(&l);
+	}
+	for (int i = 0; i < MAX_IMAGES; i++)
+	{
+		image_t im = ui->images[i];
+		if (im.owner == NO_OWNER)
+		{
+			continue;
+		}
+		draw_image(&im);
+	}
 }
 
-void unload_ui(ui_t* ui) {
-  for (int i = 0; i < MAX_IMAGES; i++) {
-    image_t img = ui->images[i];
-    if(img.owner == NO_OWNER) continue;
-    UnloadTexture(img.texture);
-  }
+void unload_ui(ui_t* ui)
+{
+	for (int i = 0; i < MAX_IMAGES; i++)
+	{
+		image_t img = ui->images[i];
+		if (img.owner == NO_OWNER)
+		{
+			continue;
+		}
+		UnloadTexture(img.texture);
+	}
 }
 
-void init_ui_components(ui_t *ui) {
-  // set all button owner to -1 (no owner)
-  for (int i=0; i<MAX_BUTTONS; i++) ui->buttons[i].owner = NO_OWNER;
-  for (int i=0; i<MAX_LABLES; i++) ui->lables[i].owner = NO_OWNER;
-  for (int i=0; i<MAX_IMAGES; i++) ui->images[i].owner = NO_OWNER;
+void init_ui_components(ui_t* ui)
+{
+	// set all button owner to -1 (no owner)
+	for (int i = 0; i < MAX_BUTTONS; i++)
+	{
+		ui->buttons[i].owner = NO_OWNER;
+	}
+	for (int i = 0; i < MAX_LABELS; i++)
+	{
+		ui->labels[i].owner = NO_OWNER;
+	}
+	for (int i = 0; i < MAX_IMAGES; i++)
+	{
+		ui->images[i].owner = NO_OWNER;
+	}
 }
 
+ui_t* init_start_ui(void)
+{
+	ui_t ui = {
+		.owner = START_UI,
+	};
 
+	init_ui_components(&ui);
 
-ui_t* init_start_ui(void){
-  ui_t ui = {
-    .owner = START_UI,
-  };
+	button_t start_button =
+		create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 85, 10, 5, RAYWHITE, BLACK, "START GAME", start_click_start);
+	button_t options_button =
+		create_button(PAD_COMP(POS_AXIS, 38), SCREEN_HT - 85, 10, 5, RAYWHITE, BLACK, "OPTIONS", options_click_start);
 
-  init_ui_components(&ui);
+	start_button.owner	 = START_UI;
+	options_button.owner = START_UI;
 
-  button_t start_button =
-    create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 85, 10, 5, RAYWHITE, BLACK, "START GAME", start_click_start);
-  button_t options_button =
-    create_button(PAD_COMP(POS_AXIS, 38), SCREEN_HT - 85, 10, 5, RAYWHITE, BLACK, "OPTIONS", options_click_start);
+	label_t label = create_label(CENTER_AXIS, CENTER_AXIS, "2026 GameJam", RAYWHITE, 32.0f, GetFontDefault());
+	label.owner	  = START_UI;
 
-  start_button.owner = START_UI;
-  options_button.owner = START_UI;
+	Texture2D texture  = LoadTexture("./assets/death_start_game.png");
+	Rectangle pos	   = {CENTER_AXIS, 100, 150, 150};
+	Rectangle text_pos = {0.0f, 0.0f, (f32)texture.width, (f32)texture.height};
 
-  lable_t lable = create_lable(CENTER_AXIS, CENTER_AXIS, "2026 GameJam", RAYWHITE, 32.0f, GetFontDefault());
-  lable.owner = START_UI;
+	image_t image = create_image(pos, text_pos, texture, 0);
+	image.owner	  = START_UI;
 
-  Texture2D texture = LoadTexture("./assets/death_start_game.png");
-  Rectangle pos = {CENTER_AXIS, 100, 150, 150};
-  Rectangle text_pos = {0,0,texture.width,texture.height};
+	ui.buttons[0] = start_button;
+	ui.buttons[1] = options_button;
+	ui.labels[0]  = label;
+	ui.images[0]  = image;
 
-  image_t image = create_image(pos, text_pos, texture, 0);
-  image.owner = START_UI;
+	start_ui = ui;
 
-  ui.buttons[0] = start_button;
-  ui.buttons[1] = options_button;
-  ui.lables[0] = lable;
-  ui.images[0] = image;
-
-  start_ui = ui;
-
-  return &start_ui;
+	return &start_ui;
 }
 
+ui_t* init_game_ui(void)
+{
+	ui_t ui = {
+		.owner = GAME,
+	};
 
-ui_t* init_game_ui(void) {
-  ui_t ui = {
-    .owner = GAME,
-  };
-
-  init_ui_components(&ui);
-  game_ui = ui;
-  return &game_ui;
+	init_ui_components(&ui);
+	game_ui = ui;
+	return &game_ui;
 }
 
-ui_t* init_options_ui(void) {
-  ui_t ui = {
-    .owner = OPTIONS_UI,
-  };
+ui_t* init_options_ui(void)
+{
+	ui_t ui = {
+		.owner = OPTIONS_UI,
+	};
 
-  init_ui_components(&ui);
-  button_t back_button =
-    create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 85, 10, 5, RAYWHITE, BLACK, "BACK", back_click_options);
-  back_button.owner = OPTIONS_UI;
+	init_ui_components(&ui);
+	button_t back_button =
+		create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 85, 10, 5, RAYWHITE, BLACK, "BACK", back_click_options);
+	back_button.owner = OPTIONS_UI;
 
-  ui.buttons[0] = back_button;
+	ui.buttons[0] = back_button;
 
-  options_ui = ui;
-  return &options_ui;
+	options_ui = ui;
+	return &options_ui;
 }
 
-void start_click_start( gamestate* state ) {
-  unload_ui(state->active_ui);
-  state->ui_state = GAME;
-  state->active_ui = init_game_ui();
+void start_click_start(gamestate* state)
+{
+	unload_ui(state->active_ui);
+	state->ui_state	 = GAME;
+	state->active_ui = init_game_ui();
 }
 
 // Not impl yet
-void options_click_start(gamestate* state) {
-  unload_ui(state->active_ui);
-  state->ui_state=OPTIONS_UI;
-  state->active_ui = init_options_ui();
+void options_click_start(gamestate* state)
+{
+	unload_ui(state->active_ui);
+	state->ui_state	 = OPTIONS_UI;
+	state->active_ui = init_options_ui();
 }
 
-void back_click_options(gamestate* state) {
-   state->ui_state = START_UI;
-   // blat textures blat unload ui too 
-   state->active_ui = init_start_ui();
+void back_click_options(gamestate* state)
+{
+	state->ui_state = START_UI;
+	// blat textures blat unload ui too
+	state->active_ui = init_start_ui();
 }
 
+ui_t* init_comabat_ui(entity_t* entity, gamestate* state)
+{
+	ui_t ui = {
+		.owner = COMBAT_UI,
+	};
 
-ui_t* init_comabat_ui(entity_t *entity, gamestate* state) {
-  ui_t ui = {
-    .owner = COMBAT_UI,
-  };
+	init_ui_components(&ui);
+	(void)entity;
 
-  init_ui_components(&ui);
-  (void) entity;
+	button_t attack =
+		create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 85, 10, 5, GRAY, RED, "Attacks", attack_click_combat);
+	attack.font_size = 22;
+	attack.owner	 = COMBAT_UI;
+	reframe_button(&attack);
 
-  button_t attack = create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 85, 10, 5, GRAY, RED, "Attacks", attack_click_combat);
-  attack.font_size = 22;
-  attack.owner = COMBAT_UI;
-  reframe_button(&attack);
+	button_t skills =
+		create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 120, 10, 5, GRAY, BLUE, "Skills", skills_click_combat);
+	skills.font_size = 22;
+	skills.owner	 = COMBAT_UI;
+	reframe_button(&skills);
 
-  button_t skills = create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 120, 10, 5, GRAY, BLUE, "Skills", skills_click_combat);
-  skills.font_size = 22;
-  skills.owner = COMBAT_UI;
-  reframe_button(&skills);
+	ui.buttons[0] = attack;
+	ui.buttons[1] = skills;
 
-  ui.buttons[0] = attack;
-  ui.buttons[1] = skills;
+	// TODO event that updates this when player takes dmg
+	const char* player_hp_str = TextFormat("PLAYER'S HP : %d", state->player->hp);
+	label_t		player_hp =
+		create_label(PAD_COMP(POS_AXIS, 50), SCREEN_HT - 120, player_hp_str, BLUE, 22, GetFontDefault());
+	const char* entity_hp_str = TextFormat("%s HP : %d", "ENEMY'S", state->player->hp);
+	label_t		ent_hp = create_label(PAD_COMP(POS_AXIS, 50), SCREEN_HT - 85, entity_hp_str, RED, 22, GetFontDefault());
 
-  // TODO event that updates this when player takes dmg
-  const char* player_hp_str = TextFormat("PLAYER'S HP : %d", state->player->hp);
-  lable_t player_hp = create_lable(PAD_COMP(POS_AXIS, 50), SCREEN_HT - 120, player_hp_str, BLUE, 22, GetFontDefault());
-  const char* entity_hp_str = TextFormat("%s HP : %d", "ENEMY'S", state->player->hp);
-  lable_t ent_hp = create_lable(PAD_COMP(POS_AXIS, 50), SCREEN_HT - 85, entity_hp_str, RED, 22, GetFontDefault());
+	ui.labels[0] = player_hp;
+	ui.labels[1] = ent_hp;
 
-  ui.lables[0] = player_hp;
-  ui.lables[1] = ent_hp;
-  
-  combat_ui = ui;
-  return &combat_ui;
+	combat_ui = ui;
+	return &combat_ui;
 }
 
-void attack_click_combat(gamestate *state) {
-  if(state->ui_state != COMBAT_UI) return;
-  state->active_ui->buttons[MAX_BUTTONS - 1].owner = NO_OWNER; 
-  state->active_ui->buttons[MAX_BUTTONS - 2].owner = NO_OWNER; 
+void attack_click_combat(gamestate* state)
+{
+	if (state->ui_state != COMBAT_UI)
+	{
+		return;
+	}
+	state->active_ui->buttons[MAX_BUTTONS - 1].owner = NO_OWNER;
+	state->active_ui->buttons[MAX_BUTTONS - 2].owner = NO_OWNER;
 
-  button_t punch = create_button(PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 120, 10, 5, GRAY, RED, "Punch", combat_player_punch);
-  punch.font_size = 22;
-  punch.owner = COMBAT_UI;
-  reframe_button(&punch);
+	button_t punch =
+		create_button(PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 120, 10, 5, GRAY, RED, "Punch", combat_player_punch);
+	punch.font_size = 22;
+	punch.owner		= COMBAT_UI;
+	reframe_button(&punch);
 
-  button_t kick = create_button(PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 85, 10, 5, GRAY, RED, "Kick", combat_player_kick);
-  kick.font_size = 22;
-  kick.owner = COMBAT_UI;
-  reframe_button(&kick);
+	button_t kick =
+		create_button(PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 85, 10, 5, GRAY, RED, "Kick", combat_player_kick);
+	kick.font_size = 22;
+	kick.owner	   = COMBAT_UI;
+	reframe_button(&kick);
 
-  state->active_ui->buttons[MAX_BUTTONS - 1] = punch; 
-  state->active_ui->buttons[MAX_BUTTONS - 2] = kick; 
+	state->active_ui->buttons[MAX_BUTTONS - 1] = punch;
+	state->active_ui->buttons[MAX_BUTTONS - 2] = kick;
 }
 
-void skills_click_combat(gamestate *state) {
-  if(state->ui_state != COMBAT_UI) return;
-  state->active_ui->buttons[MAX_BUTTONS - 1].owner = NO_OWNER; 
-  state->active_ui->buttons[MAX_BUTTONS - 2].owner = NO_OWNER; 
+void skills_click_combat(gamestate* state)
+{
+	if (state->ui_state != COMBAT_UI)
+	{
+		return;
+	}
+	state->active_ui->buttons[MAX_BUTTONS - 1].owner = NO_OWNER;
+	state->active_ui->buttons[MAX_BUTTONS - 2].owner = NO_OWNER;
 
-  button_t sm_heal = create_button(PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 85, 10, 5, GRAY, BLUE, "Small Heal", skill_player_smheal);
-  sm_heal.font_size = 22;
-  sm_heal.owner = COMBAT_UI;
-  reframe_button(&sm_heal);
-  state->active_ui->buttons[MAX_BUTTONS - 1] = sm_heal; 
+	button_t sm_heal =
+		create_button(PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 85, 10, 5, GRAY, BLUE, "Small Heal", skill_player_smheal);
+	sm_heal.font_size = 22;
+	sm_heal.owner	  = COMBAT_UI;
+	reframe_button(&sm_heal);
+	state->active_ui->buttons[MAX_BUTTONS - 1] = sm_heal;
 }
