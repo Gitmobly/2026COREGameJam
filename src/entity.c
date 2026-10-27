@@ -1,71 +1,86 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <math.h>
 
 #include "entity.h"
-#include "map.h"
-#include "gamestate.h"
 
-void entity_interactions(gamestate* state)
+#include "game.h"
+#include "monster.h"
+#include "projectile.h"
+#include "map.h"
+#include "player.h"
+#include "main.h"
+#include "ui.h"
+
+void entity_interactions(app_state_t* app)
 {
-	map_room_t* room = state->active_room;
-	entity_t** ents = room->entities;
-	for (int i = 0; i < MAP_ENTITY_MAX; i++)
+	level_state_t* level = &app->game_state->current_level;
+	map_room_t*	   room	 = level->active_room;
+
+	entity_player_interact(level->player_entity, NULL, room);
+
+	for (u32 i = 0; i < room->entity_count; i++)
 	{
-		if (ents[i] == NULL)
+		entity_t* ent = &room->entities[i];
+
+		if (ent->hp <= 0)
 		{
 			continue;
 		}
-		for (int j = 0; j < MAP_ENTITY_MAX; j++)
+
+		if (ent->type == E_MONSTER)
 		{
-			if (i == j || ents[j] == NULL)
+			entity_monster_interact(ent, level->player_entity, app);
+
+			if (app->ui_state->current_ui->screen != GAME)
 			{
-				continue;
+				return;
 			}
-			if (ents[i]->type == E_PROJECTILE)
-			{
-				entity_projectile_interact(ents[i], ents[j], room);
-			}
-			if (ents[i]->type == E_PLAYER)
-			{
-				entity_player_interact(ents[i], ents[j], room);
-			}
-			if (ents[i]->type == E_MONSTER)
-			{
-				entity_monster_interact(ents[i], ents[j], state);
-			}
-		}
-		if (ents[i]->type == E_PROJECTILE)
-		{
-			entity_projectile_interact(ents[i], NULL, room);
-		}
-		if (ents[i]->type == E_PLAYER)
-		{
-			entity_player_interact(ents[i], NULL, room);
-		}
-		if (ents[i]->type == E_MONSTER)
-		{
-			entity_monster_interact(ents[i], NULL, state);
 		}
 	}
 
-	for (int i = 0; i < MAP_ENTITY_MAX; i++)
+	for (u32 i = 0; i < room->entity_count; i++)
 	{
-		if (ents[i] == NULL)
+		entity_t* ent = &room->entities[i];
+
+		if (ent->hp <= 0)
 		{
 			continue;
 		}
 
-		if (ents[i]->hp <= 0)
+		ent->pos.x += ent->vel.x;
+		ent->pos.y += ent->vel.y;
+	}
+
+	for (u32 i = 0; i < room->entity_count; i++)
+	{
+		entity_t* proj = &room->entities[i];
+
+		if (proj->type != E_PROJECTILE || proj->hp <= 0)
 		{
-			// Todo - free list or just not use ptr array for ents since we have a max bound
-			// free(ents[i]);
-			ents[i] = NULL;
 			continue;
 		}
 
-		ents[i]->pos[0] += ents[i]->vel[0];
-		ents[i]->pos[1] += ents[i]->vel[1];
+		entity_projectile_interact(proj, NULL, room);
+
+		if (proj->hp <= 0)
+		{
+			continue;
+		}
+
+		for (u32 j = 0; j < room->entity_count; j++)
+		{
+			entity_t* target = &room->entities[j];
+
+			if (target->type != E_MONSTER || target->hp <= 0)
+			{
+				continue;
+			}
+
+			entity_projectile_interact(proj, target, room);
+
+			if (proj->hp <= 0)
+			{
+				break;
+			}
+		}
 	}
 }

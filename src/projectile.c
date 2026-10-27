@@ -12,22 +12,26 @@ void entity_projectile_interact(entity_t* proj, entity_t* other, map_room_t* roo
 
 	if (other == NULL)
 	{
-		if (proj->pos[0] < 0 || proj->pos[0] > 1000 || proj->pos[1] < 0 || proj->pos[1] > 1000)
+		if (proj->pos.x < 0 || proj->pos.x > 1000 || proj->pos.y < 0 || proj->pos.y > 1000)
 		{
 			proj->hp = 0;
 		}
+
 		return;
 	}
 
-	if (other->type == E_PLAYER)
+	if (other->type != E_MONSTER || other->hp <= 0)
 	{
-		double dx	= proj->pos[0] - other->pos[0];
-		double dy	= proj->pos[1] - other->pos[1];
-		double dist = sqrt(dx * dx + dy * dy);
-		if (dist > 24)
-		{
-			return;
-		}
+		return;
+	}
+
+	f32 dx = proj->pos.x - other->pos.x;
+	f32 dy = proj->pos.y - other->pos.y;
+
+	f32 distSq = dx * dx + dy * dy;
+
+	if (distSq <= 24.0f * 24.0f)
+	{
 		other->hp -= 10;
 		proj->hp = 0;
 	}

@@ -1,50 +1,48 @@
-#include <stdlib.h>
-#include <string.h>
 #include <math.h>
 
+#include "monster.h"
 #include "arena.h"
 #include "entity.h"
-#include "gamestate.h"
 #include "ui.h"
+#include "main.h"
 
 char* monster_name = "jeb_";
 
 entity_t* entity_init_monster(arena_t* arena)
 {
-	entity_t* mon = arena_push_struct(arena, entity_t);
+	entity_t* mon = arena_push_struct_zero(arena, entity_t);
 	mon->hp		  = 50;
 	mon->speed	  = 1.5;
 	mon->name	  = monster_name;
 	mon->type	  = E_MONSTER;
-	mon->pos[0]	  = 320;
-	mon->pos[1]	  = 320;
+	mon->pos.x	  = 320;
+	mon->pos.y	  = 320;
 	return mon;
 }
 
-void entity_monster_interact(entity_t* mon, entity_t* other, gamestate* gamestate)
+void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app)
 {
-	if (other == NULL)
+	if (!other || other->type != E_PLAYER || other->hp <= 0)
 	{
 		return;
 	}
 
-	if (other->type == E_PLAYER)
+	f32 dx = other->pos.x - mon->pos.x;
+	f32 dy = other->pos.y - mon->pos.y;
+
+	f32 distSq = dx * dx + dy * dy;
+
+	if (distSq <= 24.0f * 24.0f)
 	{
-		double mon_dx = other->pos[0] - mon->pos[0];
-		double mon_dy = other->pos[1] - mon->pos[1];
-		double mon_d  = sqrt(mon_dx * mon_dx + mon_dy * mon_dy);
+		mon->vel = (Vector2){0};
 
-		mon->vel[0] = mon->speed * mon_dx / mon_d;
-		mon->vel[1] = mon->speed * mon_dy / mon_d;
+		app->ui_state->current_ui = init_comabat_ui(mon, app);
 
-		if (mon_d < 24)
-		{
-			//other->hp -= 10;
-			mon->pos[0] -= mon->vel[0] * 8;
-			mon->pos[1] -= mon->vel[1] * 8;
-			gamestate->ui_state = COMBAT_UI;
-			gamestate->active_ui = init_comabat_ui(mon, gamestate);
-			gamestate->active_interaction = mon;
-		}
+		return;
 	}
+
+	f32 invDist = 1.0f / sqrtf(distSq);
+
+	mon->vel.x = dx * invDist * mon->speed;
+	mon->vel.y = dy * invDist * mon->speed;
 }
