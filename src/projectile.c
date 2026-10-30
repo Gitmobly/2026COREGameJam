@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include "entity.h"
+#include "graphics.h"
 
 char* projectile_name = "The Hero of Our Story";
 
@@ -12,7 +13,8 @@ void entity_projectile_interact(entity_t* proj, entity_t* other, map_room_t* roo
 
 	if (other == NULL)
 	{
-		if (proj->pos.x < 0 || proj->pos.x > 1000 || proj->pos.y < 0 || proj->pos.y > 1000)
+		if (proj->pos.x < 0 || proj->pos.x > SCREEN_WD - PAD * 2 || proj->pos.y < 0 ||
+			proj->pos.y > SCREEN_HT - PAD * 2)
 		{
 			proj->hp = 0;
 		}

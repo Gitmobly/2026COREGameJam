@@ -31,5 +31,3 @@ typedef struct entity_t
 entity_t* entity_player_init(arena_t* arena);
 entity_t* entity_init_monster(arena_t* arena);
 void	  entity_interactions(app_state_t* app);
-
-void entity_player_interact(entity_t* player, entity_t* other, map_room_t* room);

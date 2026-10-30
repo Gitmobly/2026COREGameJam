@@ -25,7 +25,8 @@ int main(void)
 	};
 
 	InitWindow(SCREEN_WD, SCREEN_HT, "2026 Core Game Jam");
-	SetTargetFPS(60);
+	HideCursor();
+	SetTargetFPS(144);
 
 	app_state_t*  app_state	 = arena_push_struct(permanent_arena, app_state_t);
 	game_state_t* game_state = arena_push_struct(permanent_arena, game_state_t);
@@ -51,16 +52,21 @@ int main(void)
 	game_state->current_level.active_room	= room;
 	game_state->current_level.player_entity = &room->entities[0];
 
+	input_state_t* inp	   = arena_push_struct_zero(permanent_arena, input_state_t);
+	app_state->input_state = inp;
+
 	while (!WindowShouldClose())
 	{
-		render(app_state);
 		input_update_ui(app_state);
+		input_update_entities(inp);
 
 		if (app_state->ui_state->current_ui->screen == GAME)
 		{
 			// Pause entity interactions if ui switches
 			entity_interactions(app_state);
 		}
+
+		render(app_state);
 	}
 
 	CloseWindow();

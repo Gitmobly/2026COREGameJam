@@ -12,7 +12,7 @@ entity_t* entity_init_monster(arena_t* arena)
 {
 	entity_t* mon = arena_push_struct_zero(arena, entity_t);
 	mon->hp		  = 50;
-	mon->speed	  = 1.5;
+	mon->speed	  = 2.5;
 	mon->name	  = monster_name;
 	mon->type	  = E_MONSTER;
 	mon->pos.x	  = 320;
