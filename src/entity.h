@@ -17,6 +17,8 @@ typedef enum
 	E_PLAYER,
 } entity_type_t;
 
+#define MONSTER_HIT_FLASH_TIME 0.12f
+
 typedef struct entity_t
 {
 	Vector2		  pos;
@@ -26,10 +28,11 @@ typedef struct entity_t
 	char*		  name;
 	entity_type_t type;
 	weapon_t	  weapon;
+
+	Vector2 knockback;
+	f32		hit_stun_remaining;
+	f32		hit_flash_remaining;
 } entity_t;
 
 entity_t* entity_player_init(arena_t* arena);
-entity_t* entity_init_monster(arena_t* arena);
 void	  entity_interactions(app_state_t* app);
-
-void entity_player_interact(entity_t* player, entity_t* other, map_room_t* room);

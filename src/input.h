@@ -7,11 +7,12 @@ typedef struct app_state_t app_state_t;
 
 typedef struct
 {
-	s32 move[2];
-	s32 fire[2];
-	b32 action;
+	Vector2 move;
+	b32		fire;
+	b32		action;
+	b32		mouse_down;
 } input_state_t;
 
-input_state_t input_update_entity(void);
+void input_update_entities(input_state_t* prev);
 
 void input_update_ui(app_state_t* app);

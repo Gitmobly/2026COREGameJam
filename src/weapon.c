@@ -7,33 +7,75 @@
 
 char* str_projectile = "projectile";
 
-weapon_t weapon_init_base()
+weapon_t weapon_init_base(void)
 {
 	return (weapon_t){
-		.speed	   = 8.0,
-		.fire_rate = 1.0,
-		.damage	   = 10.0,
-		.fire_last = 0.0,
+		.speed	   = 8.0f,
+		.fire_rate = 0.25f,
+		.damage	   = 10.0f,
+		.fire_last = -1.0,
+
+		.ammo		  = 6,
+		.max_ammo	  = 6,
+		.reload_time  = 1.25f,
+		.reload_until = 0.0,
+		.reloading	  = 0,
+
+		.shots_fired	= 0,
+		.last_shot_time = -1.0,
 	};
+}
+
+void weapon_update(weapon_t* w)
+{
+	if (w->reloading && GetTime() >= w->reload_until)
+	{
+		w->ammo		 = w->max_ammo;
+		w->reloading = 0;
+	}
 }
 
 void weapon_fire(entity_t* ent, map_room_t* room, Vector2 dir)
 {
-	f64 now = GetTime();
-	if (now - ent->weapon.fire_last < ent->weapon.fire_rate)
+	weapon_t* w	  = &ent->weapon;
+	f64		  now = GetTime();
+
+	if (w->reloading || w->ammo == 0)
 	{
 		return;
 	}
 
-	ent->weapon.fire_last = now;
+	if (now - w->fire_last < w->fire_rate)
+	{
+		return;
+	}
 
 	entity_t projectile = {
-		.hp	  = INT_MAX,
-		.pos  = ent->pos,
-		.vel  = {dir.x * ent->weapon.speed, dir.y * ent->weapon.speed},
+		.hp	 = 1,
+		.pos = ent->pos,
+		.vel =
+			{
+				dir.x * w->speed,
+				dir.y * w->speed,
+			},
 		.type = E_PROJECTILE,
 		.name = "projectile",
 	};
 
-	map_add_entity(&projectile, room);
+	if (!map_add_entity(&projectile, room))
+	{
+		return;
+	}
+
+	w->ammo--;
+	w->fire_last = now;
+
+	w->last_shot_time = now;
+	w->shots_fired++;
+
+	if (w->ammo == 0)
+	{
+		w->reloading	= 1;
+		w->reload_until = now + w->reload_time;
+	}
 }

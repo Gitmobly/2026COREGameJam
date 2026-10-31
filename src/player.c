@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -5,6 +6,7 @@
 #include "entity.h"
 #include "input.h"
 #include "weapon.h"
+#include "graphics.h"
 
 char* player_name = "The Hero of Our Story";
 
@@ -20,27 +22,37 @@ entity_t* entity_player_init(arena_t* arena)
 	return pla;
 }
 
-void entity_player_interact(entity_t* player, entity_t* other, map_room_t* room)
+void entity_player_interact(entity_t* player, entity_t* other, map_room_t* room, input_state_t* inp)
 {
-	(void)room;
-	(void)player;
-	(void)other;
-
-	if (other == NULL)
+	if (other != NULL)
 	{
-		input_state_t inp = input_update_entity();
-		player->vel.x	  = player->speed * inp.move[0];
-		player->vel.y	  = player->speed * inp.move[1];
+		return;
+	}
 
-		if (inp.fire[0] != 0 || inp.fire[1] != 0)
+	weapon_update(&player->weapon);
+
+	player->vel.x = player->speed * inp->move.x;
+	player->vel.y = player->speed * inp->move.y;
+
+	if (inp->fire)
+	{
+		Vector2 mouse = GetMousePosition();
+
+		Vector2 dir = {
+			mouse.x - (player->pos.x + PAD),
+			mouse.y - (player->pos.y + PAD),
+		};
+
+		f32 lenSq = dir.x * dir.x + dir.y * dir.y;
+
+		if (lenSq > 0.0f)
 		{
-			Vector2 dir = {
-				(f32)inp.fire[0],
-				(f32)inp.fire[1],
-			};
+			f32 invLen = 1.0f / sqrtf(lenSq);
+
+			dir.x *= invLen;
+			dir.y *= invLen;
+
 			weapon_fire(player, room, dir);
 		}
-
-		return;
 	}
 }

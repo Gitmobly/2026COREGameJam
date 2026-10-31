@@ -3,17 +3,21 @@
 #include "input.h"
 #include "main.h"
 
-input_state_t input_update_entity(void)
+void input_update_entities(input_state_t* prev)
 {
-	input_state_t state;
-	state.move[0] = IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
-	state.move[1] = IsKeyDown(KEY_S) - IsKeyDown(KEY_W);
+	prev->move.x = (f32)IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
+	prev->move.y = (f32)IsKeyDown(KEY_S) - IsKeyDown(KEY_W);
 
-	state.fire[0] = IsKeyDown(KEY_RIGHT) - IsKeyDown(KEY_LEFT);
-	state.fire[1] = IsKeyDown(KEY_DOWN) - IsKeyDown(KEY_UP);
+	if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+	{
+		prev->fire = 1;
+	}
+	else
+	{
+		prev->fire = 0;
+	}
 
-	state.action = IsKeyPressed(KEY_SPACE);
-	return state;
+	prev->action = IsKeyPressed(KEY_SPACE);
 }
 
 void input_update_ui(app_state_t* app)
