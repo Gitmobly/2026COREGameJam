@@ -37,6 +37,16 @@ internal Camera2D get_game_camera(game_state_t* game)
 		camera.offset.y = cosf(time * 75.0f) * amplitude;
 	}
 
+	if (game->hit_shake_remaining > 0.0f)
+	{
+		f32 t		  = game->hit_shake_remaining / 0.09f;
+		f32 amplitude = 1.4f * t * t;
+		f32 time	  = (f32)GetTime();
+
+		camera.offset.x += sinf(time * 153.0f) * amplitude;
+		camera.offset.y += cosf(time * 127.0f) * amplitude;
+	}
+
 	return camera;
 }
 
@@ -86,7 +96,44 @@ internal void draw_crosshair(const weapon_t* weapon)
 		DrawCircleV(pos, 3.0f, color);
 	}
 
-	DrawCircleV(mouse, 2.0f, RED);
+	DrawCircleV(mouse, 2.0f, PURPLE);
+}
+
+internal void draw_room_walls(const map_room_t* room)
+{
+	const f32 left		= (f32)PAD;
+	const f32 right		= (f32)(SCREEN_WD - PAD);
+	const f32 top		= (f32)PAD;
+	const f32 bottom	= (f32)(SCREEN_HT - PAD);
+	const f32 center_y	= SCREEN_HT * 0.5f;
+	const f32 gap		= MAP_EXIT_HALF_HEIGHT;
+	const f32 thickness = 4.0f;
+
+	DrawLineEx((Vector2){left, top}, (Vector2){right, top}, thickness, LIGHTGRAY);
+	DrawLineEx((Vector2){left, bottom}, (Vector2){right, bottom}, thickness, LIGHTGRAY);
+	DrawLineEx((Vector2){left, top}, (Vector2){left, bottom}, thickness, LIGHTGRAY);
+
+	if (!room->exit_open)
+	{
+		DrawLineEx((Vector2){right, top}, (Vector2){right, bottom}, thickness, LIGHTGRAY);
+		return;
+	}
+
+	DrawLineEx((Vector2){right, top}, (Vector2){right, center_y - gap}, thickness, LIGHTGRAY);
+	DrawLineEx((Vector2){right, center_y + gap}, (Vector2){right, bottom}, thickness, LIGHTGRAY);
+
+	f32 elapsed = (f32)GetTime() - room->wall_break_time;
+	if (elapsed >= 0.0f && elapsed < 0.4f)
+	{
+		f32 t = elapsed / 0.4f;
+		for (int i = 0; i < 12; i++)
+		{
+			f32 x = right + elapsed * (35.0f + (f32)(i % 4) * 12.0f);
+			f32 y = center_y - gap + 5.0f + (f32)i * 8.0f;
+			y += ((i & 1) ? 1.0f : -1.0f) * elapsed * 35.0f;
+			DrawRectangleV((Vector2){x, y}, (Vector2){5.0f, 5.0f}, Fade(LIGHTGRAY, 1.0f - t));
+		}
+	}
 }
 
 void render(app_state_t* app)
@@ -110,6 +157,7 @@ void render(app_state_t* app)
 
 			DrawRectangle(PAD, PAD, SCREEN_WD - PAD * 2, SCREEN_HT - PAD * 2, BLACK);
 
+			draw_room_walls(app->game_state->current_level.active_room);
 			draw_game(app->game_state);
 
 			EndMode2D();
@@ -154,6 +202,8 @@ void draw_game(game_state_t* state)
 {
 	map_room_t* room = state->current_level.active_room;
 
+	DrawText(TextFormat("ROOM %u", state->room_number), PAD + 12, PAD + 12, 18, LIGHTGRAY);
+
 	for (u32 i = 0; i < room->entity_count; i++)
 	{
 		entity_t* ent = &room->entities[i];
@@ -163,6 +213,19 @@ void draw_game(game_state_t* state)
 			continue;
 		}
 
-		DrawCircle(PAD + (int)ent->pos.x, PAD + (int)ent->pos.y, (f32)get_size(ent), get_color(ent));
+		Vector2 pos	   = {(f32)PAD + ent->pos.x, (f32)PAD + ent->pos.y};
+		f32		radius = (f32)get_size(ent);
+		Color	color  = get_color(ent);
+
+		if (ent->type == E_MONSTER && ent->hit_flash_remaining > 0.0f)
+		{
+			f32 t = ent->hit_flash_remaining / MONSTER_HIT_FLASH_TIME;
+			color = RAYWHITE;
+			DrawCircleLines((int)pos.x, (int)pos.y, radius + (1.0f - t) * 7.0f, Fade(ORANGE, t * 0.8f));
+		}
+
+		DrawCircleV(pos, radius, color);
 	}
+
+	fx_draw(&room->fx, (Vector2){(f32)PAD, (f32)PAD});
 }

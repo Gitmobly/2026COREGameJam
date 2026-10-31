@@ -38,16 +38,13 @@ int main(void)
 	app_state->game_state = game_state;
 	app_state->ui_state	  = ui_state;
 
-	map_world_t* world = arena_push_struct_zero(level_arena, map_world_t);
+	map_room_t* room = arena_push_struct_zero(level_arena, map_room_t);
 
-	entity_t* monster = entity_init_monster(permanent_arena);
-	entity_t* player  = entity_player_init(permanent_arena);
-	player->weapon	  = weapon_init_base();
+	entity_t* player = entity_player_init(permanent_arena);
+	player->weapon	 = weapon_init_base();
 
-	map_room_t* room = &world->rooms[8][8];
-
-	map_add_entity(player, room);
-	map_add_entity(monster, room);
+	game_state->room_number = 1;
+	map_generate_room(room, player, game_state->room_number);
 
 	game_state->current_level.active_room	= room;
 	game_state->current_level.player_entity = &room->entities[0];
