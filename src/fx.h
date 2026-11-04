@@ -2,7 +2,7 @@
 #define FX_H
 
 #include "utils.h"
-#include "vendor/raylib/raylib.h"
+#include <raylib.h>
 
 #define FX_PARTICLE_MAX 192
 

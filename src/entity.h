@@ -3,7 +3,7 @@
 #include "utils.h"
 #include "arena.h"
 #include "weapon.h"
-#include "vendor/raylib/raylib.h"
+#include <raylib.h>
 
 typedef struct map_room_t	 map_room_t;
 typedef struct level_state_t level_state_t;

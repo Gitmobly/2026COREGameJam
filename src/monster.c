@@ -1,4 +1,5 @@
 #include <math.h>
+#include <raymath.h>
 
 #include "monster.h"
 #include "entity.h"
@@ -18,24 +19,23 @@ entity_t entity_init_monster(void)
 
 void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app)
 {
-	if (!other || other->type != E_PLAYER || other->hp <= 0)
+	if (other == NULL || other->type != E_PLAYER || other->hp <= 0)
 	{
 		return;
 	}
 
-	f32 dx = other->pos.x - mon->pos.x;
-	f32 dy = other->pos.y - mon->pos.y;
+    Vector2 vec_towards = Vector2Subtract(other->pos, mon->pos);
+    f32 distance = Vector2Length(vec_towards);
 
-	f32 distSq = dx * dx + dy * dy;
-
-	if (distSq <= 24.0f * 24.0f)
+    if (distance < 24)
 	{
 		mon->vel				  = (Vector2){0};
 		app->ui_state->current_ui = init_comabat_ui(mon, app);
 		return;
 	}
 
-	f32 invDist = 1.0f / sqrtf(distSq);
-	mon->vel.x	= dx * invDist * mon->speed;
-	mon->vel.y	= dy * invDist * mon->speed;
+    Vector2 direction = Vector2Normalize(vec_towards);
+
+	mon->vel.x	= direction.x * mon->speed;
+	mon->vel.y	= direction.y * mon->speed;
 }

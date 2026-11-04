@@ -1,5 +1,6 @@
 #include "ui.h"
-#include "vendor/raylib/raylib.h"
+#include <raylib.h>
+#include <raymath.h>
 #include "input.h"
 #include "main.h"
 
@@ -7,16 +8,9 @@ void input_update_entities(input_state_t* prev)
 {
 	prev->move.x = (f32)IsKeyDown(KEY_D) - IsKeyDown(KEY_A);
 	prev->move.y = (f32)IsKeyDown(KEY_S) - IsKeyDown(KEY_W);
+    prev->move = Vector2Normalize(prev->move);
 
-	if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
-	{
-		prev->fire = 1;
-	}
-	else
-	{
-		prev->fire = 0;
-	}
-
+    prev->fire = IsMouseButtonDown(MOUSE_LEFT_BUTTON);
 	prev->action = IsKeyPressed(KEY_SPACE);
 }
 

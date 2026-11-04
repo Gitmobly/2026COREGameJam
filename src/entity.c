@@ -21,7 +21,7 @@ void entity_interactions(app_state_t* app)
 	fx_update(&room->fx, dt);
 	game->hit_shake_remaining = fmaxf(0.0f, game->hit_shake_remaining - dt);
 
-	entity_player_interact(level->player_entity, NULL, room, app->input_state);
+	entity_player_interact(level->player_entity, room, app->input_state);
 
 	for (u32 i = 0; i < room->entity_count; i++)
 	{

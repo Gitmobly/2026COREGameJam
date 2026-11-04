@@ -3,7 +3,7 @@
 #include "weapon.h"
 #include "entity.h"
 #include "map.h"
-#include "vendor/raylib/raylib.h"
+#include <raylib.h>
 
 char* str_projectile = "projectile";
 

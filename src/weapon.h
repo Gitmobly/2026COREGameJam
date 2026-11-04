@@ -1,7 +1,7 @@
 #pragma once
 
 #include "utils.h"
-#include "vendor/raylib/raylib.h"
+#include <raylib.h>
 
 typedef struct entity_t	  entity_t;
 typedef struct map_room_t map_room_t;

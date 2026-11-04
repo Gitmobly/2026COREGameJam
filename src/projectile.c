@@ -1,4 +1,5 @@
 #include <math.h>
+#include <raymath.h>
 
 #include "entity.h"
 #include "map.h"
@@ -22,29 +23,14 @@ void entity_projectile_interact(entity_t* proj, entity_t* other, map_room_t* roo
 		return;
 	}
 
-	f32 dx		= proj->pos.x - other->pos.x;
-	f32 dy		= proj->pos.y - other->pos.y;
-	f32 dist_sq = dx * dx + dy * dy;
-
-	if (dist_sq > 24.0f * 24.0f)
-	{
-		return;
-	}
+    if (Vector2DistanceSqr(proj->pos, other->pos) > (24 * 24)) { return; }
 
 	other->hp -= 10;
 	proj->hp = 0;
-
-	f32		len_sq = proj->vel.x * proj->vel.x + proj->vel.y * proj->vel.y;
-	Vector2 dir	   = {0.0f, 0.0f};
-	if (len_sq > 0.0f)
-	{
-		f32 inv_len = 1.0f / sqrtf(len_sq);
-		dir.x		= proj->vel.x * inv_len;
-		dir.y		= proj->vel.y * inv_len;
-	}
-
 	b32 fatal = other->hp <= 0;
-	fx_emit_monster_hit(&room->fx, other->pos, dir, fatal);
+
+    Vector2 dir = Vector2Normalize(proj->vel);
+    fx_emit_monster_hit(&room->fx, other->pos, dir, fatal);
 
 	if (!fatal)
 	{

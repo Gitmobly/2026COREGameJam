@@ -3,7 +3,7 @@
 #include "map.h"
 #include "main.h"
 #include "game.h"
-#include "vendor/raylib/raylib.h"
+#include <raylib.h>
 #include <math.h>
 
 #include "graphics.h"
@@ -109,18 +109,18 @@ internal void draw_room_walls(const map_room_t* room)
 	const f32 gap		= MAP_EXIT_HALF_HEIGHT;
 	const f32 thickness = 4.0f;
 
-	DrawLineEx((Vector2){left, top}, (Vector2){right, top}, thickness, LIGHTGRAY);
-	DrawLineEx((Vector2){left, bottom}, (Vector2){right, bottom}, thickness, LIGHTGRAY);
-	DrawLineEx((Vector2){left, top}, (Vector2){left, bottom}, thickness, LIGHTGRAY);
+	DrawLineEx(v2(left, top), v2(right, top), thickness, LIGHTGRAY);
+	DrawLineEx(v2(left, bottom), v2(right, bottom), thickness, LIGHTGRAY);
+	DrawLineEx(v2(left, top), v2(left, bottom), thickness, LIGHTGRAY);
 
 	if (!room->exit_open)
 	{
-		DrawLineEx((Vector2){right, top}, (Vector2){right, bottom}, thickness, LIGHTGRAY);
+		DrawLineEx(v2(right, top), v2(right, bottom), thickness, LIGHTGRAY);
 		return;
 	}
 
-	DrawLineEx((Vector2){right, top}, (Vector2){right, center_y - gap}, thickness, LIGHTGRAY);
-	DrawLineEx((Vector2){right, center_y + gap}, (Vector2){right, bottom}, thickness, LIGHTGRAY);
+	DrawLineEx(v2(right, top), v2(right, center_y - gap), thickness, LIGHTGRAY);
+	DrawLineEx(v2(right, center_y + gap), v2(right, bottom), thickness, LIGHTGRAY);
 
 	f32 elapsed = (f32)GetTime() - room->wall_break_time;
 	if (elapsed >= 0.0f && elapsed < 0.4f)
@@ -131,7 +131,7 @@ internal void draw_room_walls(const map_room_t* room)
 			f32 x = right + elapsed * (35.0f + (f32)(i % 4) * 12.0f);
 			f32 y = center_y - gap + 5.0f + (f32)i * 8.0f;
 			y += ((i & 1) ? 1.0f : -1.0f) * elapsed * 35.0f;
-			DrawRectangleV((Vector2){x, y}, (Vector2){5.0f, 5.0f}, Fade(LIGHTGRAY, 1.0f - t));
+			DrawRectangleV(v2(x, y), v2(5, 5), Fade(LIGHTGRAY, 1.0f - t));
 		}
 	}
 }
@@ -176,8 +176,8 @@ void render(app_state_t* app)
 	{
 		Vector2 mouse = GetMousePosition();
 
-		DrawLineEx((Vector2){mouse.x - 8, mouse.y}, (Vector2){mouse.x + 8, mouse.y}, 2.0f, RED);
-		DrawLineEx((Vector2){mouse.x, mouse.y - 8}, (Vector2){mouse.x, mouse.y + 8}, 2.0f, RED);
+		DrawLineEx(v2(mouse.x - 8, mouse.y), v2(mouse.x + 8, mouse.y), 2.0f, RED);
+		DrawLineEx(v2(mouse.x, mouse.y - 8), v2(mouse.x, mouse.y + 8), 2.0f, RED);
 	}
 	else
 	{
@@ -227,5 +227,5 @@ void draw_game(game_state_t* state)
 		DrawCircleV(pos, radius, color);
 	}
 
-	fx_draw(&room->fx, (Vector2){(f32)PAD, (f32)PAD});
+	fx_draw(&room->fx, v2(PAD, PAD));
 }

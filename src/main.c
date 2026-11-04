@@ -1,5 +1,5 @@
 #include "input.h"
-#include "vendor/raylib/raylib.h"
+#include <raylib.h>
 
 #include "graphics.h"
 #include "map.h"
