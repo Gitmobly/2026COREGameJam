@@ -68,6 +68,7 @@ void entity_interactions(app_state_t* app)
 		{
             ent->hit_flash_remaining = ClampLo(ent->hit_flash_remaining - dt, 0);
             ent->hit_stun_remaining  = ClampLo(ent->hit_stun_remaining  - dt, 0);
+            ent->invulnerability_remaining  = ClampLo(ent->invulnerability_remaining - dt, 0);
 
 			if (ent->hit_stun_remaining > 0)
 			{
@@ -90,6 +91,37 @@ void entity_interactions(app_state_t* app)
             f32 distance = Vector2Distance(ent->pos, level->entity_player->pos);
             if (distance < level->entity_player->radius_visible + level->entity_soul->radius_visible) {
                 game->soul_needsToBeDespawned = true;
+            }
+        }
+
+        if (ent->type == E_TURRET) {
+            ent->reload_remaining = ClampLo(ent->reload_remaining - dt, 0);
+            if (ent->reload_remaining <= 0) {
+                ent->reload_remaining = 1.5;
+
+                Vector2 dir = v2(GetRandomValue(-100, 100), GetRandomValue(-100, 100));
+                dir = Vector2Normalize(dir);
+
+                for (int i = 0; i < 4; i++) {
+                    entity_t projectile = {
+                        .hp	 = 1,
+                        .pos = ent->pos,
+                        .vel = Vector2Scale(Vector2Rotate(dir, (PI / 2) * (f32)i), 1.5),
+                        .type = E_PROJECTILE,
+                        .name = "projectile",
+
+                        .isEnemyProjectile = true,
+
+                        .projectileDamage = 10,
+
+                        .radius_visible     = 10,
+                        .radius_damage_deal = 8,
+                        .radius_damage_take = 8,
+                    };
+
+                    map_add_entity(&projectile, room);
+                }
+
             }
         }
 	}
@@ -180,7 +212,7 @@ void entity_interactions(app_state_t* app)
 		{
 			entity_t* target = &room->entities[j];
 
-			if (target->type != E_MONSTER || target->hp <= 0)
+			if (target->hp <= 0)
 			{
 				continue;
 			}
@@ -196,8 +228,14 @@ void entity_interactions(app_state_t* app)
             // TODO: we spawn a soul upon killing a monster. At some point bullets
             // might not be the only way to kill monsters, and this should be moved
             // to a more appropriate place
-            if (target->hp <= 0) {
+            if (target->hp <= 0 && target->type == E_MONSTER) {
                 Vector2 projDir = Vector2Normalize(proj->vel);
+
+
+                // TODO: okay i made this indirect in order to avoid modifying
+                // the array while we're iterating on it, but is it really a
+                // problem? Not sure, we might want to implement an entity-adding-queue
+                // just in case
 
                 game->soul_needsToBeSpawned = true;
                 game->soul_entityToSpawn = (entity_t){
@@ -214,7 +252,28 @@ void entity_interactions(app_state_t* app)
                     .radius_visible     = 10,
                     .radius_damage_take = 10,
                     .radius_damage_deal = -1000,
+
+                    .invulnerability_remaining = 0.15,
                 };
+
+                entity_t turretEntity = (entity_t){
+                    .pos        = target->pos,
+                    .speed      = 0,
+                    .knockback  = Vector2Scale(projDir, -500),
+                    .knockbackDragMultiplier = 10,
+
+                    .hp         = 999999999,
+                    .name       = "aboba",
+                    .type       = E_TURRET,
+
+                    .radius_visible     = 30,
+                    .radius_damage_take = -1000,
+                    .radius_damage_deal = -1000,
+
+                    .reload_remaining = 1.5,
+                };
+
+                map_add_entity(&turretEntity, room);
             }
 
 			if (proj->hp <= 0)

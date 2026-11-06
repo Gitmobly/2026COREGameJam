@@ -4,7 +4,7 @@
 #include "utils.h"
 #include <raylib.h>
 
-#define FX_PARTICLE_MAX 1024
+#define FX_PARTICLE_MAX 512
 
 typedef struct fx_particle_t
 {

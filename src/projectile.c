@@ -16,15 +16,23 @@ void entity_projectile_interact(entity_t* proj, entity_t* other, map_room_t* roo
 		return;
 	}
 
-	if (other->type != E_MONSTER || other->hp <= 0)
-	{
-		return;
-	}
+    if (other->hp <= 0) {
+        return;
+    }
+
+    if ((proj->isEnemyProjectile && other->type != E_PLAYER && other->type != E_SOUL) ||
+        (!proj->isEnemyProjectile && other->type != E_MONSTER))
+    {
+        return;
+    }
 
     float distance = Vector2Distance(proj->pos, other->pos);
     if (distance > (proj->radius_damage_deal + other->radius_damage_take)) { return; }
 
-	other->hp -= 10;
+    if (other->invulnerability_remaining <= 0) {
+        other->hp -= proj->projectileDamage;
+    }
+
 	proj->hp = 0;
 	b32 fatal = other->hp <= 0;
 
@@ -39,8 +47,4 @@ void entity_projectile_interact(entity_t* proj, entity_t* other, map_room_t* roo
 		other->hit_stun_remaining  = 0.10f;
 		other->hit_flash_remaining = MONSTER_HIT_FLASH_TIME;
 	}
-
-    if (fatal) {
-        // TODO: queue soul spawning
-    }
 }

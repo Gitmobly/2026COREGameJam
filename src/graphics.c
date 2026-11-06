@@ -17,6 +17,8 @@ Color get_color(entity_t* entity)
     case E_MONSTER:     return RED;
     case E_PLAYER:      return BLUE;
     case E_SOUL:        return YELLOW;
+    case E_TURRET:      return DARKGRAY;
+    case E_PROJECTILE:  return entity->isEnemyProjectile ? RED : BLUE;
     }
 }
 

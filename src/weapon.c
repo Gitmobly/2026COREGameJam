@@ -59,6 +59,8 @@ void weapon_fire(entity_t* ent, map_room_t* room, Vector2 dir)
 		.type = E_PROJECTILE,
 		.name = "projectile",
 
+        .projectileDamage = 10,
+
         .radius_visible     = 8,
         .radius_damage_deal = 8,
         .radius_damage_take = 8,

@@ -33,7 +33,7 @@ void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app)
     f32 distance = Vector2Length(vec_towards);
 
     // TODO: we probably dont want an instakill, damage and knockback instead? idk
-    if (distance < (mon->radius_damage_deal + other->radius_damage_take))
+    if (other->invulnerability_remaining > 0 && distance < (mon->radius_damage_deal + other->radius_damage_take))
 	{
 		mon->vel				  = (Vector2){0};
 		app->ui_state->current_ui = init_combat_ui(mon, app);

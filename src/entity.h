@@ -12,7 +12,10 @@ typedef struct app_state_t	 app_state_t;
 typedef enum
 {
 	E_UNKNOWN,
+
 	E_MONSTER,
+    E_TURRET,
+
 	E_PROJECTILE,
 
 	E_PLAYER,
@@ -35,10 +38,15 @@ typedef struct entity_t
     f32           radius_damage_take;   // taking damage
     f32           radius_damage_deal;   // dealing damage
 
+    b32 isEnemyProjectile;
+    s32           projectileDamage;
+
 	Vector2 knockback;
     float   knockbackDragMultiplier;
 	f32		hit_stun_remaining;
 	f32		hit_flash_remaining;
+    f32     invulnerability_remaining;
+    f32     reload_remaining;
 } entity_t;
 
 entity_t* entity_player_init(arena_t* arena);
