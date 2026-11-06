@@ -38,6 +38,8 @@ typedef struct entity_t
     f32           radius_damage_take;   // taking damage
     f32           radius_damage_deal;   // dealing damage
 
+    Vector2 playerLastDirection;
+
     b32 isEnemyProjectile;
     s32           projectileDamage;
 

@@ -23,7 +23,6 @@ entity_t entity_init_monster(void)
         .radius_damage_deal = 12,
 	};
 }
-
 void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app)
 {
 	if (other == NULL || (other->type != E_PLAYER && other->type != E_SOUL) || other->hp <= 0)
@@ -96,11 +95,17 @@ void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app)
 
 
 
-    // TODO: we probably dont want an instakill, damage and knockback instead? idk
     if (other->invulnerability_remaining <= 0 && distance < (mon->radius_damage_deal + other->radius_damage_take))
 	{
-		mon->vel				  = (Vector2){0};
-		app->ui_state->current_ui = init_combat_ui(mon, app);
+        other->invulnerability_remaining = 0.2;
+        other->knockback = Vector2Scale(Vector2Normalize(Vector2Subtract(other->pos, mon->pos)), 500);
+        other->knockbackDragMultiplier = 6;
+        other->hit_stun_remaining = 0.25;
+        other->hp -= 10;
+
+        mon->knockback = Vector2Scale(Vector2Normalize(Vector2Subtract(other->pos, mon->pos)), -200);
+        mon->knockbackDragMultiplier = 6;
+
 		return;
 	}
 }

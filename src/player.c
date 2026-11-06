@@ -30,10 +30,16 @@ entity_t* entity_player_init(arena_t* arena)
 	return player;
 }
 
-void entity_player_interact(entity_t* player, map_room_t* room, input_state_t* inp)
+void entity_player_interact(entity_t* player, map_room_t* room, input_state_t* inp, f32 dt)
 {
-	player->vel.x = player->speed * inp->move.x;
-	player->vel.y = player->speed * inp->move.y;
+    Vector2 direction = Vector2MoveTowards(player->playerLastDirection, inp->move, 20 * dt);
+    player->playerLastDirection = direction;
+
+    // Vector2 direction = inp->move;
+    // dt = dt;
+
+	player->vel.x = player->speed * direction.x;
+	player->vel.y = player->speed * direction.y;
 
 
     if (player->type == E_PLAYER) {

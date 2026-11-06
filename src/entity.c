@@ -23,6 +23,11 @@ void entity_interactions(app_state_t* app)
 	fx_update(&room->fx, dt);
 	game->hit_shake_remaining = ClampLo(game->hit_shake_remaining - dt, 0);
 
+    if (level->entity_controlled->hp <= 0) {
+		app->ui_state->current_ui = init_combat_ui(NULL, app);
+        return;
+    }
+
     if (game->soul_needsToBeSpawned) {
         game->soul_needsToBeSpawned = false;
         game->soul_active = true;
@@ -54,7 +59,7 @@ void entity_interactions(app_state_t* app)
         level->entity_soul->hp = 0;
     }
 
-    entity_player_interact(level->entity_controlled, room, app->input_state);
+    entity_player_interact(level->entity_controlled, room, app->input_state, dt);
 
 	for (u32 i = 0; i < room->entity_count; i++)
 	{
