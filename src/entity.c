@@ -173,7 +173,7 @@ void entity_interactions(app_state_t* app)
 			f32 half_opening = MAP_EXIT_HALF_HEIGHT - radius;
 			b32 inside_exit	 = next.y >= exit_y - half_opening && next.y <= exit_y + half_opening;
 
-			if (room->exit_open && inside_exit && next.x > (GAME_WD - 1.5 * radius))
+			if (room->exit_open && inside_exit && next.x > (GAME_WD - 1.5 * radius) && !game->soul_active)
 			{
 				game_next_room(app);
 				return;
