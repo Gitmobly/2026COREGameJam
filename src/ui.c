@@ -325,11 +325,11 @@ ui_t* init_combat_ui(entity_t* entity, app_state_t* state)
 	ui.buttons[1] = skills;
 
 	// TODO event that updates this when player takes dmg
-	const char* player_hp_str = TextFormat("PLAYER'S HP : %d", state->game_state->current_level.player_entity->hp);
+	const char* player_hp_str = TextFormat("PLAYER'S HP : %d", state->game_state->current_level.entity_controlled->hp);
 	label_t	player_hp =
 		create_label(NO_OWNER, PAD_COMP(POS_AXIS, 50), SCREEN_HT - 120, player_hp_str, BLUE, 22, GetFontDefault());
 
-	const char* entity_hp_str = TextFormat("%s HP : %d", "ENEMY'S", state->game_state->current_level.player_entity->hp);
+	const char* entity_hp_str = TextFormat("%s HP : %d", "ENEMY'S", state->game_state->current_level.entity_controlled->hp);
 	label_t	ent_hp =
         create_label(NO_OWNER, PAD_COMP(POS_AXIS, 50), SCREEN_HT - 85, entity_hp_str, RED, 22, GetFontDefault());
 

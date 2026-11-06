@@ -32,22 +32,29 @@ entity_t* entity_player_init(arena_t* arena)
 
 void entity_player_interact(entity_t* player, map_room_t* room, input_state_t* inp)
 {
-	weapon_update(&player->weapon);
-
 	player->vel.x = player->speed * inp->move.x;
 	player->vel.y = player->speed * inp->move.y;
 
-	if (inp->fire)
-	{
-		Vector2 mouse = GetMousePosition();
 
-		Vector2 dir = {
-			mouse.x - (player->pos.x + BOUNDARY_WIDTH),
-			mouse.y - (player->pos.y + BOUNDARY_WIDTH),
-		};
+    if (player->type == E_PLAYER) {
+        weapon_update(&player->weapon);
 
-        if (Vector2Equals(dir, v2(0, 0))) { return; }
+        if (inp->fire)
+        {
+            Vector2 mouse = GetMousePosition();
 
-        weapon_fire(player, room, Vector2Normalize(dir));
-	}
+            Vector2 dir = {
+                mouse.x - (player->pos.x + BOUNDARY_WIDTH),
+                mouse.y - (player->pos.y + BOUNDARY_WIDTH),
+            };
+
+            if (Vector2Equals(dir, v2(0, 0))) { return; }
+
+            weapon_fire(player, room, Vector2Normalize(dir));
+        }
+    }
+
+    if (player->type == E_SOUL) {
+
+    }
 }

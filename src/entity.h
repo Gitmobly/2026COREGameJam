@@ -14,7 +14,9 @@ typedef enum
 	E_UNKNOWN,
 	E_MONSTER,
 	E_PROJECTILE,
+
 	E_PLAYER,
+    E_SOUL,
 } entity_type_t;
 
 #define MONSTER_HIT_FLASH_TIME 0.12f

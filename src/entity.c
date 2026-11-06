@@ -23,7 +23,36 @@ void entity_interactions(app_state_t* app)
 	fx_update(&room->fx, dt);
 	game->hit_shake_remaining = ClampLo(game->hit_shake_remaining - dt, 0);
 
-	entity_player_interact(level->player_entity, room, app->input_state);
+    if (game->soul_needsToBeSpawned) {
+        game->soul_needsToBeSpawned = false;
+
+        entity_t *soul_entity = map_add_entity(&game->soul_entityToSpawn, room);
+
+        // TODO: knockback player
+
+        level->entity_soul = soul_entity;
+        level->entity_controlled = soul_entity;
+
+        level->entity_player->vel = v2(0, 0);
+        Vector2 dir = v2(GetRandomValue(-100, 100), GetRandomValue(-100, 100));
+        level->entity_player->knockback = Vector2Scale(Vector2Normalize(dir), 500);
+
+        TraceLog(LOG_INFO, "SPAWNED SOUL %p\n", soul_entity);
+    }
+
+    if (game->soul_needsToBeDespawned) {
+        game->soul_needsToBeDespawned = false;
+
+        Vector2 direction = Vector2Subtract(level->entity_player->pos, level->entity_soul->pos);
+        direction = Vector2Normalize(direction);
+
+        level->entity_controlled = level->entity_player; 
+        level->entity_player->hit_stun_remaining = 0.3;
+        level->entity_player->knockback = Vector2Scale(direction, 500);
+        level->entity_soul->hp = 0;
+    }
+
+    entity_player_interact(level->entity_controlled, room, app->input_state);
 
 	for (u32 i = 0; i < room->entity_count; i++)
 	{
@@ -34,7 +63,6 @@ void entity_interactions(app_state_t* app)
 			continue;
 		}
 
-		if (ent->type == E_MONSTER)
 		{
             ent->hit_flash_remaining = ClampLo(ent->hit_flash_remaining - dt, 0);
             ent->hit_stun_remaining  = ClampLo(ent->hit_stun_remaining  - dt, 0);
@@ -45,13 +73,23 @@ void entity_interactions(app_state_t* app)
 				continue;
 			}
 
-			entity_monster_interact(ent, level->player_entity, app);
+		}
+
+        if (ent->type == E_MONSTER) {
+			entity_monster_interact(ent, level->entity_controlled, app);
 
 			if (app->ui_state->current_ui->screen != GAME)
 			{
 				return;
 			}
-		}
+        }
+
+        if (ent->type == E_SOUL) {
+            f32 distance = Vector2Distance(ent->pos, level->entity_player->pos);
+            if (distance < level->entity_player->radius_visible + level->entity_soul->radius_visible) {
+                game->soul_needsToBeDespawned = true;
+            }
+        }
 	}
 
     game->wall_shake_remaining = ClampLo(game->wall_shake_remaining - dt, 0);
@@ -72,7 +110,6 @@ void entity_interactions(app_state_t* app)
 			ent->pos.y + ent->vel.y,
 		};
 
-		if (ent->type == E_MONSTER)
 		{
 			next.x += ent->knockback.x * dt;
 			next.y += ent->knockback.y * dt;
@@ -86,6 +123,10 @@ void entity_interactions(app_state_t* app)
 			ent->knockback.y *= drag;
 		}
 
+		if (ent->type == E_MONSTER) {
+
+        }
+
 		if (ent->type == E_PLAYER)
 		{
             f32 radius = ent->radius_visible;
@@ -98,7 +139,7 @@ void entity_interactions(app_state_t* app)
 			f32 half_opening = MAP_EXIT_HALF_HEIGHT - radius;
 			b32 inside_exit	 = next.y >= exit_y - half_opening && next.y <= exit_y + half_opening;
 
-			if (room->exit_open && inside_exit && next.x > (GAME_WD - radius))
+			if (room->exit_open && inside_exit && next.x > (GAME_WD - 1.5 * radius))
 			{
 				game_next_room(app);
 				return;
@@ -150,6 +191,31 @@ void entity_interactions(app_state_t* app)
 				game->hit_shake_remaining = 0.09f;
 			}
 
+            // TODO: we spawn a soul upon killing a monster. At some point bullets
+            // might not be the only way to kill monsters, and this should be moved
+            // to a more appropriate place
+            if (target->hp <= 0) {
+                Vector2 projDir = Vector2Normalize(proj->vel);
+
+                game->soul_needsToBeSpawned = true;
+                game->soul_entityToSpawn = (entity_t){
+                    .pos        = target->pos,
+                    .speed      = 3,
+                    .knockback  = Vector2Scale(projDir, 500),
+                    .hit_stun_remaining = 0.25,
+
+                    .hp         = 50,
+                    .name       = "aboba",
+                    .type       = E_SOUL,
+
+                    .radius_visible     = 10,
+                    .radius_damage_take = 10,
+                    .radius_damage_deal = -1000,
+                };
+
+                game->soul_active = true;
+            }
+
 			if (proj->hp <= 0)
 			{
 				break;
@@ -159,7 +225,7 @@ void entity_interactions(app_state_t* app)
 
 	if (!room->exit_open)
 	{
-		b32 monsters_alive = 0;
+		b32 monsters_alive = false;
 
 		for (u32 i = 0; i < room->entity_count; i++)
 		{
@@ -167,14 +233,14 @@ void entity_interactions(app_state_t* app)
 
 			if (ent->type == E_MONSTER && ent->hp > 0)
 			{
-				monsters_alive = 1;
+				monsters_alive = true;
 				break;
 			}
 		}
 
 		if (!monsters_alive)
 		{
-			room->exit_open		  = 1;
+			room->exit_open		  = true;
 			room->wall_break_time = (f32)GetTime();
 
 			game->wall_shake_remaining = 0.15f;

@@ -24,7 +24,7 @@ entity_t entity_init_monster(void)
 
 void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app)
 {
-	if (other == NULL || other->type != E_PLAYER || other->hp <= 0)
+	if (other == NULL || (other->type != E_PLAYER && other->type != E_SOUL) || other->hp <= 0)
 	{
 		return;
 	}
@@ -32,6 +32,7 @@ void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app)
     Vector2 vec_towards = Vector2Subtract(other->pos, mon->pos);
     f32 distance = Vector2Length(vec_towards);
 
+    // TODO: we probably dont want an instakill, damage and knockback instead? idk
     if (distance < (mon->radius_damage_deal + other->radius_damage_take))
 	{
 		mon->vel				  = (Vector2){0};

@@ -44,10 +44,11 @@ int main(void)
 	player->weapon	 = weapon_init_base();
 
 	game_state->room_number = 1;
-	map_generate_room(room, player, game_state->room_number);
+	entity_t *spawned_player = map_generate_room(room, player, game_state->room_number);
 
 	game_state->current_level.active_room	= room;
-	game_state->current_level.player_entity = &room->entities[0];
+	game_state->current_level.entity_player = spawned_player;
+    game_state->current_level.entity_controlled = spawned_player;
 
 	input_state_t* inp	   = arena_push_struct_zero(permanent_arena, input_state_t);
 	app_state->input_state = inp;

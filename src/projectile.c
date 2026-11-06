@@ -10,11 +10,9 @@ void entity_projectile_interact(entity_t* proj, entity_t* other, map_room_t* roo
 {
 	if (other == NULL)
 	{
-		if (proj->pos.x < 0 || proj->pos.x > SCREEN_WD - BOUNDARY_WIDTH * 2 || proj->pos.y < 0 ||
-			proj->pos.y > SCREEN_HT - BOUNDARY_WIDTH * 2)
-		{
-			proj->hp = 0;
-		}
+        if (IsOutOfBounds(proj->pos, proj->radius_visible)) {
+            proj->hp = 0;
+        }
 		return;
 	}
 
@@ -23,7 +21,8 @@ void entity_projectile_interact(entity_t* proj, entity_t* other, map_room_t* roo
 		return;
 	}
 
-    if (Vector2DistanceSqr(proj->pos, other->pos) > (24 * 24)) { return; }
+    float distance = Vector2Distance(proj->pos, other->pos);
+    if (distance > (proj->radius_damage_deal + other->radius_damage_take)) { return; }
 
 	other->hp -= 10;
 	proj->hp = 0;
@@ -39,4 +38,8 @@ void entity_projectile_interact(entity_t* proj, entity_t* other, map_room_t* roo
 		other->hit_stun_remaining  = 0.10f;
 		other->hit_flash_remaining = MONSTER_HIT_FLASH_TIME;
 	}
+
+    if (fatal) {
+        // TODO: queue soul spawning
+    }
 }

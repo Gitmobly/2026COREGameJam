@@ -5,7 +5,7 @@
 #include <string.h>
 #include <raymath.h>
 
-b32 map_add_entity(entity_t* entity, map_room_t* room)
+entity_t *map_add_entity(entity_t* entity, map_room_t* room)
 {
 	for (u32 i = 0; i < room->entity_count; i++)
 	{
@@ -14,25 +14,28 @@ b32 map_add_entity(entity_t* entity, map_room_t* room)
 		if (/*slot->type == E_PROJECTILE &&*/ slot->hp <= 0)
 		{
 			*slot = *entity;
-			return true;
+			return slot;
 		}
 	}
 
 	if (room->entity_count >= MAP_ENTITY_MAX)
 	{
-		return false;
+		return NULL;
 	}
 
-	room->entities[room->entity_count++] = *entity;
-	return true;
+    entity_t *slot = &room->entities[room->entity_count++];
+	*slot = *entity;
+	return slot;
 }
 
-void map_generate_room(map_room_t* room, const entity_t* player, u32 depth)
+entity_t *map_generate_room(map_room_t* room, entity_t* player, u32 depth)
 {
 	memset(room, 0, sizeof(*room));
 
-	room->entities[0]  = *player;
-	room->entity_count = 1;
+    entity_t *spawned_player = map_add_entity(player, room);
+
+	// room->entities[0]  = *player;
+	// room->entity_count = 1;
 
 	u32 monster_count = depth < 12 ? depth : 12;
 	for (u32 i = 0; i < monster_count; i++)
@@ -64,4 +67,6 @@ void map_generate_room(map_room_t* room, const entity_t* player, u32 depth)
 			}
 		}
 	}
+
+    return spawned_player;
 }

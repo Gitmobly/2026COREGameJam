@@ -37,5 +37,5 @@ typedef struct
 	u32		   door_count;
 } map_world_t;
 
-b32	 map_add_entity(entity_t* entity, map_room_t* room);
-void map_generate_room(map_room_t* room, const entity_t* player, u32 depth);
+entity_t	 *map_add_entity(entity_t* entity, map_room_t* room);
+entity_t     *map_generate_room(map_room_t* room, entity_t* player, u32 depth);

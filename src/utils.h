@@ -6,6 +6,7 @@
  */
 
 #include <stdint.h>
+#include <raymath.h>
 
 #define ARRAYCOUNT(x) ((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))
 
@@ -58,5 +59,7 @@ typedef struct dims_t
 // NOTE: dont want these to be macros for reasons you can probably guess
 float ClampLo(float value, float min);
 float ClampHi(float value, float max);
+
+b32 IsOutOfBounds(Vector2 pos, float radius);
 
 #endif

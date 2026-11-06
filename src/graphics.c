@@ -16,6 +16,7 @@ Color get_color(entity_t* entity)
 
     case E_MONSTER:     return RED;
     case E_PLAYER:      return BLUE;
+    case E_SOUL:        return YELLOW;
     }
 }
 
@@ -174,7 +175,7 @@ void render(app_state_t* app)
 	}
 	else
 	{
-		entity_t* player = app->game_state->current_level.player_entity;
+		entity_t* player = app->game_state->current_level.entity_player;
 
 		draw_crosshair(&player->weapon);
 	}
