@@ -48,3 +48,18 @@ Apart from implementing these, we have to additionally implement:
 
 1. Losing ability to inflict damage for some time after killing
 2. Ability to choose an ability
+
+***
+
+Okay this turned out to be even cooler than I assumed. Not only
+is there an aspect of navigating through bullet hell, there's also
+an aspect of positioning around enemies to try and kill them in a
+more convenient spot. Since your bullets are fast, there's enough
+incentive to snipe enemies, which leads to cool pathfinding back
+to your body.
+
+That said, spawning a turret every time an enemy dies is probably
+a bit too much, at some point it's just barely possible to dodge
+everything. We need more consequences that somehow affect all
+remaining enemies, or anything else that doesn't simply make more
+bullets spawn.

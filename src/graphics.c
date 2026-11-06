@@ -14,7 +14,15 @@ Color get_color(entity_t* entity)
     switch (entity->type) {
     default:            return GRAY;
 
-    case E_MONSTER:     return RED;
+    case E_MONSTER:     {
+                            f32 hp = (float)entity->hp;
+                            f32 max_hp = 50;
+
+                            Color color_full = RED;
+                            Color color_dead = { 120, 90, 90, 255 };
+
+                            return ColorLerp(color_dead, color_full, hp / max_hp);
+                        }
     case E_PLAYER:      return BLUE;
     case E_SOUL:        return YELLOW;
     case E_TURRET:      return DARKGRAY;
@@ -231,4 +239,46 @@ void draw_game(game_state_t* state)
 	}
 
 	fx_draw(&room->fx, v2(BOUNDARY_WIDTH, BOUNDARY_WIDTH));
+
+
+    {
+        f32 player_health = state->current_level.entity_player->hp;
+        f32 player_maxHealth = 100;
+        f32 player_health_lerp = Clamp(player_health / player_maxHealth, 0, 1);
+
+
+
+        f32 player_health_grayLerp = state->soul_active ? 0.7 : 0;
+        Color player_health_color = ColorLerp(BLUE, (Color){ 100, 100, 100, 255 }, player_health_grayLerp);
+
+
+        DrawRectangle(0, SCREEN_HT - BOUNDARY_WIDTH * 0.6, SCREEN_WD * player_health_lerp, BOUNDARY_WIDTH * 0.6, player_health_color);
+
+
+        // TODO: this might get bugged if soul dies (overall run-ending sequence should be reworked)
+        if (state->soul_active) {
+            f32 soul_health = state->current_level.entity_soul->hp;
+            f32 soul_maxHealth = 20;
+            f32 soul_health_lerp = Clamp(soul_health / soul_maxHealth, 0, 1);
+
+            Color gradientStart = YELLOW;
+            gradientStart.a = 80;
+
+            Color gradientEnd = YELLOW;
+            gradientEnd.a = 0;
+
+            DrawRectangle(0, 0, SCREEN_WD * soul_health_lerp, BOUNDARY_WIDTH * 0.6, YELLOW);
+
+            DrawRectangleGradientV(0, 0, SCREEN_WD, SCREEN_HT * 0.6, gradientStart, gradientEnd);
+        }
+        else {
+            Color gradientStart = BLUE;
+            gradientStart.a = 0;
+
+            Color gradientEnd = BLUE;
+            gradientEnd.a = 50;
+
+            DrawRectangleGradientV(0, SCREEN_HT * 0.4, SCREEN_WD, SCREEN_HT * 0.6, gradientStart, gradientEnd);
+        }
+    }
 }

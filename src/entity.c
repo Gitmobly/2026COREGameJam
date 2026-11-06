@@ -173,6 +173,8 @@ void entity_interactions(app_state_t* app)
 			f32 half_opening = MAP_EXIT_HALF_HEIGHT - radius;
 			b32 inside_exit	 = next.y >= exit_y - half_opening && next.y <= exit_y + half_opening;
 
+            // TODO: we should probably randomize which side has the exit, so that the player cant camp
+            // (it's really not *that* important though)
 			if (room->exit_open && inside_exit && next.x > (GAME_WD - 1.5 * radius) && !game->soul_active)
 			{
 				game_next_room(app);
@@ -245,7 +247,7 @@ void entity_interactions(app_state_t* app)
                     .knockbackDragMultiplier = 10,
                     .hit_stun_remaining = 0.25,
 
-                    .hp         = 50,
+                    .hp         = 20,
                     .name       = "aboba",
                     .type       = E_SOUL,
 
