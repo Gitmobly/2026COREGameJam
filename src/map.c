@@ -11,20 +11,20 @@ b32 map_add_entity(entity_t* entity, map_room_t* room)
 	{
 		entity_t* slot = &room->entities[i];
 
-		if (slot->type == E_PROJECTILE && slot->hp <= 0)
+		if (/*slot->type == E_PROJECTILE &&*/ slot->hp <= 0)
 		{
 			*slot = *entity;
-			return 1;
+			return true;
 		}
 	}
 
 	if (room->entity_count >= MAP_ENTITY_MAX)
 	{
-		return 0;
+		return false;
 	}
 
 	room->entities[room->entity_count++] = *entity;
-	return 1;
+	return true;
 }
 
 void map_generate_room(map_room_t* room, const entity_t* player, u32 depth)
@@ -42,8 +42,8 @@ void map_generate_room(map_room_t* room, const entity_t* player, u32 depth)
 		for (u32 attempt = 0; attempt < 64; attempt++)
 		{
 			monster.pos = (Vector2){
-				(f32)GetRandomValue(220, SCREEN_WD - PAD * 2 - 50),
-				(f32)GetRandomValue(60,  SCREEN_HT - PAD * 2 - 60),
+				(f32)GetRandomValue(220, SCREEN_WD - BOUNDARY_WIDTH * 2 - 50),
+				(f32)GetRandomValue(60,  SCREEN_HT - BOUNDARY_WIDTH * 2 - 60),
 			};
 
 			b32 overlap = 0;

@@ -306,7 +306,7 @@ void back_click_options(app_state_t* state)
 	state->ui_state->current_ui = build_start_ui(state->ui_state->allocators);
 }
 
-ui_t* init_comabat_ui(entity_t* entity, app_state_t* state)
+ui_t* init_combat_ui(entity_t* entity, app_state_t* state)
 {
 	ui_t ui = {
 		.screen = COMBAT_UI,

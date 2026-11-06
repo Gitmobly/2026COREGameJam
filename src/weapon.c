@@ -4,6 +4,8 @@
 #include "entity.h"
 #include "map.h"
 #include <raylib.h>
+#include <raymath.h>
+#include "cheats.h"
 
 char* str_projectile = "projectile";
 
@@ -15,7 +17,7 @@ weapon_t weapon_init_base(void)
 		.damage	   = 10.0f,
 		.fire_last = -1.0,
 
-		.ammo		  = 6,
+        .ammo         = CHEATED_VALUE(CHEAT_AMMO, 6),
 		.max_ammo	  = 6,
 		.reload_time  = 1.25f,
 		.reload_until = 0.0,
@@ -53,13 +55,13 @@ void weapon_fire(entity_t* ent, map_room_t* room, Vector2 dir)
 	entity_t projectile = {
 		.hp	 = 1,
 		.pos = ent->pos,
-		.vel =
-			{
-				dir.x * w->speed,
-				dir.y * w->speed,
-			},
+		.vel = Vector2Scale(dir, w->speed),
 		.type = E_PROJECTILE,
 		.name = "projectile",
+
+        .radius_visible     = 8,
+        .radius_damage_deal = 8,
+        .radius_damage_take = 8,
 	};
 
 	if (!map_add_entity(&projectile, room))
@@ -75,7 +77,7 @@ void weapon_fire(entity_t* ent, map_room_t* room, Vector2 dir)
 
 	if (w->ammo == 0)
 	{
-		w->reloading	= 1;
+		w->reloading	= true;
 		w->reload_until = now + w->reload_time;
 	}
 }

@@ -7,7 +7,10 @@
 #define COMP_CENTER_X(wd) (CENTER_X - (wd / 2.0f))
 #define COMP_CENTER_Y(ht) (CENTER_Y - (ht / 2.0f))
 
-#define PAD 32
+// NOTE: game coordinates are normalized wrt boundary
+#define BOUNDARY_WIDTH 32
+#define GAME_WD           (SCREEN_WD - BOUNDARY_WIDTH * 2)
+#define GAME_HT           (SCREEN_HT - BOUNDARY_WIDTH * 2)
 
 typedef struct app_state_t	app_state_t;
 typedef struct game_state_t game_state_t;

@@ -5,15 +5,20 @@
 #include "entity.h"
 #include "ui.h"
 #include "main.h"
+#include "cheats.h"
 
 entity_t entity_init_monster(void)
 {
 	return (entity_t){
-		.hp	   = 50,
+		.hp	   = CHEATED_VALUE(50, CHEAT_MONSTER_HEALTH),
 		.speed = 0.5f,
 		.name  = "jeb_",
 		.type  = E_MONSTER,
 		.pos   = {320.0f, 320.0f},
+
+        .radius_visible     = 16,
+        .radius_damage_take = 16,
+        .radius_damage_deal = 12,
 	};
 }
 
@@ -27,10 +32,10 @@ void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app)
     Vector2 vec_towards = Vector2Subtract(other->pos, mon->pos);
     f32 distance = Vector2Length(vec_towards);
 
-    if (distance < 24)
+    if (distance < (mon->radius_damage_deal + other->radius_damage_take))
 	{
 		mon->vel				  = (Vector2){0};
-		app->ui_state->current_ui = init_comabat_ui(mon, app);
+		app->ui_state->current_ui = init_combat_ui(mon, app);
 		return;
 	}
 

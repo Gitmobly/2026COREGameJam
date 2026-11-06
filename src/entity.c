@@ -11,6 +11,8 @@
 #include "graphics.h"
 #include "ui.h"
 
+#include <raymath.h>
+
 void entity_interactions(app_state_t* app)
 {
 	level_state_t* level = &app->game_state->current_level;
@@ -19,7 +21,7 @@ void entity_interactions(app_state_t* app)
 	f32			   dt	 = GetFrameTime();
 
 	fx_update(&room->fx, dt);
-	game->hit_shake_remaining = fmaxf(0.0f, game->hit_shake_remaining - dt);
+	game->hit_shake_remaining = ClampLo(game->hit_shake_remaining - dt, 0);
 
 	entity_player_interact(level->player_entity, room, app->input_state);
 
@@ -34,10 +36,10 @@ void entity_interactions(app_state_t* app)
 
 		if (ent->type == E_MONSTER)
 		{
-			ent->hit_flash_remaining = fmaxf(0.0f, ent->hit_flash_remaining - dt);
-			ent->hit_stun_remaining	 = fmaxf(0.0f, ent->hit_stun_remaining - dt);
+            ent->hit_flash_remaining = ClampLo(ent->hit_flash_remaining - dt, 0);
+            ent->hit_stun_remaining  = ClampLo(ent->hit_stun_remaining  - dt, 0);
 
-			if (ent->hit_stun_remaining > 0.0f)
+			if (ent->hit_stun_remaining > 0)
 			{
 				ent->vel = (Vector2){0};
 				continue;
@@ -52,12 +54,7 @@ void entity_interactions(app_state_t* app)
 		}
 	}
 
-	game->wall_shake_remaining -= dt;
-
-	if (game->wall_shake_remaining < 0.0f)
-	{
-		game->wall_shake_remaining = 0.0f;
-	}
+    game->wall_shake_remaining = ClampLo(game->wall_shake_remaining - dt, 0);
 
 	for (u32 i = 0; i < room->entity_count; i++)
 	{
@@ -68,6 +65,8 @@ void entity_interactions(app_state_t* app)
 			continue;
 		}
 
+        // TODO: arent we forgetting dt? it seems that we are, but i dont wanna touch it
+        // (also need to increase speed by like 60 in that case)
 		Vector2 next = {
 			ent->pos.x + ent->vel.x,
 			ent->pos.y + ent->vel.y,
@@ -78,36 +77,32 @@ void entity_interactions(app_state_t* app)
 			next.x += ent->knockback.x * dt;
 			next.y += ent->knockback.y * dt;
 
-			const f32 radius = 16.0f;
-			next.x			 = fmaxf(radius, fminf(next.x, SCREEN_WD - PAD * 2 - radius));
-			next.y			 = fmaxf(radius, fminf(next.y, SCREEN_HT - PAD * 2 - radius));
+            f32 radius = ent->radius_visible;
+            next.x = Clamp(next.x, 0 + radius, GAME_WD - radius);
+            next.y = Clamp(next.y, 0 + radius, GAME_HT - radius);
 
-			f32 drag = fmaxf(0.0f, 1.0f - 10.0f * dt);
+			f32 drag = ClampLo(1 - 10 * dt, 0);
 			ent->knockback.x *= drag;
 			ent->knockback.y *= drag;
 		}
 
 		if (ent->type == E_PLAYER)
 		{
-			const f32 radius = 16.0f;
+            f32 radius = ent->radius_visible;
 
-			const f32 min_x = radius;
-			const f32 min_y = radius;
+            f32 clamp_next_x = Clamp(next.x, 0 + radius, GAME_WD - radius);
+            f32 clamp_next_y = Clamp(next.y, 0 + radius, GAME_HT - radius);
+            b32 hit_wall = (clamp_next_x != next.x) || (clamp_next_y != next.y);
 
-			const f32 max_x = SCREEN_WD - PAD * 2 - radius;
-			const f32 max_y = SCREEN_HT - PAD * 2 - radius;
-
-			f32 exit_y		 = (SCREEN_HT - PAD * 2) * 0.5f;
+			f32 exit_y		 = GAME_HT * 0.5f;
 			f32 half_opening = MAP_EXIT_HALF_HEIGHT - radius;
 			b32 inside_exit	 = next.y >= exit_y - half_opening && next.y <= exit_y + half_opening;
 
-			if (room->exit_open && inside_exit && next.x > max_x)
+			if (room->exit_open && inside_exit && next.x > (GAME_WD - radius))
 			{
 				game_next_room(app);
 				return;
 			}
-
-			b32 hit_wall = next.x < min_x || next.x > max_x || next.y < min_y || next.y > max_y;
 
 			if (hit_wall && !game->player_hitting_wall)
 			{
@@ -115,8 +110,8 @@ void entity_interactions(app_state_t* app)
 			}
 
 			game->player_hitting_wall = hit_wall;
-			next.x					  = fmaxf(min_x, fminf(next.x, max_x));
-			next.y					  = fmaxf(min_y, fminf(next.y, max_y));
+            next.x = clamp_next_x;
+            next.y = clamp_next_y;
 		}
 
 		ent->pos = next;

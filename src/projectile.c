@@ -10,8 +10,8 @@ void entity_projectile_interact(entity_t* proj, entity_t* other, map_room_t* roo
 {
 	if (other == NULL)
 	{
-		if (proj->pos.x < 0 || proj->pos.x > SCREEN_WD - PAD * 2 || proj->pos.y < 0 ||
-			proj->pos.y > SCREEN_HT - PAD * 2)
+		if (proj->pos.x < 0 || proj->pos.x > SCREEN_WD - BOUNDARY_WIDTH * 2 || proj->pos.y < 0 ||
+			proj->pos.y > SCREEN_HT - BOUNDARY_WIDTH * 2)
 		{
 			proj->hp = 0;
 		}

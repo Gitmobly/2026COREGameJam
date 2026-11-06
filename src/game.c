@@ -16,7 +16,7 @@ void game_next_room(app_state_t* app)
 	map_room_t*	   room	 = level->active_room;
 
 	entity_t player = *level->player_entity;
-	player.pos		= (Vector2){40.0f, (SCREEN_HT - PAD * 2) * 0.5f};
+	player.pos		= (Vector2){40.0f, (SCREEN_HT - BOUNDARY_WIDTH * 2) * 0.5f};
 	player.vel		= (Vector2){0};
 
 	game->room_number++;

@@ -8,6 +8,7 @@
 #include "input.h"
 #include "weapon.h"
 #include "graphics.h"
+#include "cheats.h"
 
 char* player_name = "The Hero of Our Story";
 
@@ -17,9 +18,13 @@ entity_t* entity_player_init(arena_t* arena)
     *player = (entity_t){
         .pos    = v2(40, 40),
         .speed  = 4,
-        .hp     = 100,
+        .hp     = CHEATED_VALUE(CHEAT_PLAYER_HEALTH, 100),
         .name   = player_name,
         .type   = E_PLAYER,
+
+        .radius_visible     = 16,
+        .radius_damage_take = 12,
+        .radius_damage_deal = 16,
     };
 
 	return player;
@@ -37,8 +42,8 @@ void entity_player_interact(entity_t* player, map_room_t* room, input_state_t* i
 		Vector2 mouse = GetMousePosition();
 
 		Vector2 dir = {
-			mouse.x - (player->pos.x + PAD),
-			mouse.y - (player->pos.y + PAD),
+			mouse.x - (player->pos.x + BOUNDARY_WIDTH),
+			mouse.y - (player->pos.y + BOUNDARY_WIDTH),
 		};
 
         if (Vector2Equals(dir, v2(0, 0))) { return; }

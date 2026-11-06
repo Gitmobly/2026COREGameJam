@@ -178,7 +178,7 @@ void  options_click_start(app_state_t* state);
 ui_t* init_options_ui(void);
 void  back_click_options(app_state_t* state);
 
-ui_t* init_comabat_ui(entity_t* entity, app_state_t* state);
+ui_t* init_combat_ui(entity_t* entity, app_state_t* state);
 void  attack_click_combat(app_state_t* state);
 void  skills_click_combat(app_state_t* state);
 

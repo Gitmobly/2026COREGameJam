@@ -29,6 +29,10 @@ typedef struct entity_t
 	entity_type_t type;
 	weapon_t	  weapon;
 
+    f32           radius_visible;       // colliding with walls and rendering
+    f32           radius_damage_take;   // taking damage
+    f32           radius_damage_deal;   // dealing damage
+
 	Vector2 knockback;
 	f32		hit_stun_remaining;
 	f32		hit_flash_remaining;
