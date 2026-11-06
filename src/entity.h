@@ -36,6 +36,7 @@ typedef struct entity_t
     f32           radius_damage_deal;   // dealing damage
 
 	Vector2 knockback;
+    float   knockbackDragMultiplier;
 	f32		hit_stun_remaining;
 	f32		hit_flash_remaining;
 } entity_t;

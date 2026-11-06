@@ -25,30 +25,32 @@ void entity_interactions(app_state_t* app)
 
     if (game->soul_needsToBeSpawned) {
         game->soul_needsToBeSpawned = false;
+        game->soul_active = true;
 
         entity_t *soul_entity = map_add_entity(&game->soul_entityToSpawn, room);
-
-        // TODO: knockback player
 
         level->entity_soul = soul_entity;
         level->entity_controlled = soul_entity;
 
         level->entity_player->vel = v2(0, 0);
         Vector2 dir = v2(GetRandomValue(-100, 100), GetRandomValue(-100, 100));
-        level->entity_player->knockback = Vector2Scale(Vector2Normalize(dir), 500);
+        level->entity_player->knockback = Vector2Scale(Vector2Normalize(dir), 50);
+        level->entity_player->knockbackDragMultiplier = 0.5;
 
         TraceLog(LOG_INFO, "SPAWNED SOUL %p\n", soul_entity);
     }
 
     if (game->soul_needsToBeDespawned) {
         game->soul_needsToBeDespawned = false;
+        game->soul_active = false;
 
         Vector2 direction = Vector2Subtract(level->entity_player->pos, level->entity_soul->pos);
         direction = Vector2Normalize(direction);
 
         level->entity_controlled = level->entity_player; 
-        level->entity_player->hit_stun_remaining = 0.3;
+        level->entity_player->hit_stun_remaining = 0.25;
         level->entity_player->knockback = Vector2Scale(direction, 500);
+        level->entity_player->knockbackDragMultiplier = 10;
         level->entity_soul->hp = 0;
     }
 
@@ -118,7 +120,7 @@ void entity_interactions(app_state_t* app)
             next.x = Clamp(next.x, 0 + radius, GAME_WD - radius);
             next.y = Clamp(next.y, 0 + radius, GAME_HT - radius);
 
-			f32 drag = ClampLo(1 - 10 * dt, 0);
+			f32 drag = ClampLo(1 - ent->knockbackDragMultiplier * dt, 0);
 			ent->knockback.x *= drag;
 			ent->knockback.y *= drag;
 		}
@@ -202,6 +204,7 @@ void entity_interactions(app_state_t* app)
                     .pos        = target->pos,
                     .speed      = 3,
                     .knockback  = Vector2Scale(projDir, 500),
+                    .knockbackDragMultiplier = 10,
                     .hit_stun_remaining = 0.25,
 
                     .hp         = 50,
@@ -212,8 +215,6 @@ void entity_interactions(app_state_t* app)
                     .radius_damage_take = 10,
                     .radius_damage_deal = -1000,
                 };
-
-                game->soul_active = true;
             }
 
 			if (proj->hp <= 0)

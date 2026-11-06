@@ -140,11 +140,17 @@ void render(app_state_t* app)
 	DrawRectangle(BOUNDARY_WIDTH, BOUNDARY_WIDTH, GAME_WD, GAME_HT, BLACK);
 
 	b32 render_revolver = false;
+    b32 render_crosshair = true;
 
 	switch (ui->current_ui->screen)
 	{
 		case GAME:
 			render_revolver = true;
+
+            if (app->game_state->soul_active) {
+                render_crosshair = false;
+            }
+
 			Camera2D camera = get_game_camera(app->game_state);
 
 			BeginMode2D(camera);
@@ -166,7 +172,8 @@ void render(app_state_t* app)
 			break;
 	}
 
-	if (!render_revolver)
+    if (!render_crosshair) {}
+    else if (!render_revolver)
 	{
 		Vector2 mouse = GetMousePosition();
 

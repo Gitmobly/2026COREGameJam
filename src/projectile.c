@@ -35,6 +35,7 @@ void entity_projectile_interact(entity_t* proj, entity_t* other, map_room_t* roo
 	{
 		other->knockback.x		   = dir.x * 300.0f;
 		other->knockback.y		   = dir.y * 300.0f;
+        other->knockbackDragMultiplier = 10,
 		other->hit_stun_remaining  = 0.10f;
 		other->hit_flash_remaining = MONSTER_HIT_FLASH_TIME;
 	}
