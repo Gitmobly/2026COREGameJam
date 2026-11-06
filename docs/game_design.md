@@ -63,3 +63,16 @@ a bit too much, at some point it's just barely possible to dodge
 everything. We need more consequences that somehow affect all
 remaining enemies, or anything else that doesn't simply make more
 bullets spawn.
+
+Some of the things I'm thinking of doing before my week ends:
+
+- [ ] Sniper enemies (with bullets that kill your bullets?)
+- [ ] Monsters randomly rushing you down when another is killed
+- [ ] Some enemy that (somehow) disincentivises sniping it
+    - [ ] Enemies trying to dodge your bullets?
+- [ ] Some method of healing (probably heal a bit on soul re-enter)
+
+I'm also not sure what to do with the revolver crosshair thingy -
+I really like how it looks, but having to reload doesn't really
+work with this (or the previous) gameloop. Just leave it as a
+cool visual?
