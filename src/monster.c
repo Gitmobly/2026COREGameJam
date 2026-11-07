@@ -74,9 +74,13 @@ void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app, f
     if (mon->berserk_remaining > 0) {
         // TODO: rename playerLastDirection to lastDirection or smth
         Vector2 direction = Vector2MoveTowards(mon->playerLastDirection, Vector2Normalize(vec_towards), 1.5 * dt);
+        if (mon->justHitWall) {
+            direction = Vector2Normalize(vec_towards);
+        }
+
         mon->playerLastDirection = direction;
 
-        // TODO: this should gradually increase?
+
         mon->vel.x = speed * direction.x * 9;
         mon->vel.y = speed * direction.y * 9;
 

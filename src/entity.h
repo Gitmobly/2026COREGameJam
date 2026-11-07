@@ -65,6 +65,8 @@ typedef struct entity_t
 
     Consequence fixedConsequence;
 
+    b32 justHitWall;
+
     Vector2 spawn_pos;
 } entity_t;
 

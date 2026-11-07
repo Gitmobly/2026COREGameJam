@@ -154,13 +154,19 @@ void entity_interactions(app_state_t* app)
 			ent->pos.y + ent->vel.y,
 		};
 
+        f32 radius = ent->radius_visible;
+        ent->justHitWall = false;
+
 		{
 			next.x += ent->knockback.x * dt;
 			next.y += ent->knockback.y * dt;
 
-            f32 radius = ent->radius_visible;
-            next.x = Clamp(next.x, 0 + radius, GAME_WD - radius);
-            next.y = Clamp(next.y, 0 + radius, GAME_HT - radius);
+            f32 clamp_next_x = Clamp(next.x, 0 + radius, GAME_WD - radius);
+            f32 clamp_next_y = Clamp(next.y, 0 + radius, GAME_HT - radius);
+            ent->justHitWall = (clamp_next_x != next.x) || (clamp_next_y != next.y);
+
+            next.x = clamp_next_x;
+            next.y = clamp_next_y;
 
 			f32 drag = ClampLo(1 - ent->knockbackDragMultiplier * dt, 0);
 			ent->knockback.x *= drag;
@@ -173,12 +179,6 @@ void entity_interactions(app_state_t* app)
 
 		if (ent->type == E_PLAYER)
 		{
-            f32 radius = ent->radius_visible;
-
-            f32 clamp_next_x = Clamp(next.x, 0 + radius, GAME_WD - radius);
-            f32 clamp_next_y = Clamp(next.y, 0 + radius, GAME_HT - radius);
-            b32 hit_wall = (clamp_next_x != next.x) || (clamp_next_y != next.y);
-
 			f32 exit_y		 = GAME_HT * 0.5f;
 			f32 half_opening = MAP_EXIT_HALF_HEIGHT - radius;
 			b32 inside_exit	 = next.y >= exit_y - half_opening && next.y <= exit_y + half_opening;
@@ -191,14 +191,12 @@ void entity_interactions(app_state_t* app)
 				return;
 			}
 
-			if (hit_wall && !game->player_hitting_wall)
+			if (ent->justHitWall && !game->player_hitting_wall)
 			{
 				game->wall_shake_remaining = 0.15f;
 			}
 
-			game->player_hitting_wall = hit_wall;
-            next.x = clamp_next_x;
-            next.y = clamp_next_y;
+			game->player_hitting_wall = ent->justHitWall;
 		}
 
 		ent->pos = next;
@@ -304,13 +302,17 @@ void entity_interactions(app_state_t* app)
 
                         monster_total += 1;
 
-                        if (GetRandomValue(0, 100) < 90) {
+                        if (GetRandomValue(0, 100) < 60) {
                             ent->berserk_remaining = 3;
+                            Vector2 dir = Vector2Subtract(game->soul_entityToSpawn.pos, ent->pos);
+                            ent->knockback = Vector2Scale(Vector2Normalize(dir), -500);
+                            ent->knockbackDragMultiplier = 10;
+                            ent->hit_stun_remaining = 0.2;
+
                             monster_affected += 1;
                         }
                     }
 
-                    // TODO: for some reason this doesnt really work?
                     if (monster_total != 0 && monster_affected == 0) {
                         int monster_quota = ClampLo(monster_total / 2, 1);
 
@@ -321,6 +323,10 @@ void entity_interactions(app_state_t* app)
 
                             monster_quota -= 1;
                             ent->berserk_remaining = 3;
+                            Vector2 dir = Vector2Subtract(game->soul_entityToSpawn.pos, ent->pos);
+                            ent->knockback = Vector2Scale(Vector2Normalize(dir), -500);
+                            ent->knockbackDragMultiplier = 10;
+                            ent->hit_stun_remaining = 0.2;
                         }
                     }
                 }
