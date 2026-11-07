@@ -5,6 +5,17 @@
 #include "weapon.h"
 #include <raylib.h>
 
+typedef enum {
+    CSQ_RANDOM, 
+
+    CSQ_TURRET,
+    CSQ_BERSERK,
+
+    CSQ_COUNT,
+} Consequence;
+
+#define CSQ_FIRST CSQ_TURRET
+
 typedef struct map_room_t	 map_room_t;
 typedef struct level_state_t level_state_t;
 typedef struct app_state_t	 app_state_t;
@@ -50,6 +61,9 @@ typedef struct entity_t
     f32     invulnerability_remaining;
     f32     reload_remaining;
     f32     dodge_cooldown;
+    f32     berserk_remaining;
+
+    Consequence fixedConsequence;
 
     Vector2 spawn_pos;
 } entity_t;

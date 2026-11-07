@@ -56,6 +56,9 @@ void entity_interactions(app_state_t* app)
         level->entity_player->hit_stun_remaining = 0.25;
         level->entity_player->knockback = Vector2Scale(direction, 500);
         level->entity_player->knockbackDragMultiplier = 10;
+        // TODO: max health should be explicit (potentially upgradable?)
+        level->entity_player->hp = Clamp(level->entity_player->hp + 2, 0, 100);
+
         level->entity_soul->hp = 0;
     }
 
@@ -75,6 +78,7 @@ void entity_interactions(app_state_t* app)
             ent->hit_stun_remaining  = ClampLo(ent->hit_stun_remaining  - dt, 0);
             ent->invulnerability_remaining  = ClampLo(ent->invulnerability_remaining - dt, 0);
             ent->dodge_cooldown  = ClampLo(ent->dodge_cooldown - dt, 0);
+            ent->berserk_remaining  = ClampLo(ent->berserk_remaining - dt, 0);
 
 			if (ent->hit_stun_remaining > 0)
 			{
@@ -85,7 +89,7 @@ void entity_interactions(app_state_t* app)
 		}
 
         if (ent->type == E_MONSTER) {
-			entity_monster_interact(ent, level->entity_controlled, app);
+			entity_monster_interact(ent, level->entity_controlled, app, dt);
 
 			if (app->ui_state->current_ui->screen != GAME)
 			{
@@ -250,7 +254,7 @@ void entity_interactions(app_state_t* app)
                 game->soul_entityToSpawn = (entity_t){
                     .pos        = target->pos,
                     .speed      = 3,
-                    .knockback  = Vector2Scale(projDir, 500),
+                    .knockback  = Vector2Scale(projDir, 700),
                     .knockbackDragMultiplier = 10,
                     .hit_stun_remaining = 0.25,
 
@@ -262,27 +266,64 @@ void entity_interactions(app_state_t* app)
                     .radius_damage_take = 10,
                     .radius_damage_deal = -1000,
 
-                    .invulnerability_remaining = 0.15,
+                    .invulnerability_remaining = 0.3,
                 };
 
-                entity_t turretEntity = (entity_t){
-                    .pos        = target->pos,
-                    .speed      = 0,
-                    .knockback  = Vector2Scale(projDir, -500),
-                    .knockbackDragMultiplier = 10,
+                Consequence csq = GetRandomValue(CSQ_FIRST, CSQ_COUNT - 1);
+                if (target->fixedConsequence != CSQ_RANDOM) {
+                    csq = target->fixedConsequence;
+                }
 
-                    .hp         = 999999999,
-                    .name       = "aboba",
-                    .type       = E_TURRET,
+                if (csq == CSQ_TURRET) {
+                    entity_t turretEntity = (entity_t){
+                        .pos        = target->pos,
+                        .speed      = 0,
+                        .knockback  = Vector2Scale(projDir, -500),
+                        .knockbackDragMultiplier = 10,
 
-                    .radius_visible     = 30,
-                    .radius_damage_take = -1000,
-                    .radius_damage_deal = -1000,
+                        .hp         = 999999999,
+                        .name       = "aboba",
+                        .type       = E_TURRET,
 
-                    .reload_remaining = 1.5,
-                };
+                        .radius_visible     = 30,
+                        .radius_damage_take = -1000,
+                        .radius_damage_deal = -1000,
 
-                map_add_entity(&turretEntity, room);
+                        .reload_remaining = 1.5,
+                    };
+
+                    map_add_entity(&turretEntity, room);
+                }
+                else if (csq == CSQ_BERSERK) {
+                    int monster_total = 0;
+                    int monster_affected = 0;
+
+                    for (u32 i = 0; i < room->entity_count; i++) {
+                        entity_t* ent = &room->entities[i];
+                        if (ent->hp <= 0 || ent->type != E_MONSTER) { continue; }
+
+                        monster_total += 1;
+
+                        if (GetRandomValue(0, 100) < 90) {
+                            ent->berserk_remaining = 3;
+                            monster_affected += 1;
+                        }
+                    }
+
+                    // TODO: for some reason this doesnt really work?
+                    if (monster_total != 0 && monster_affected == 0) {
+                        int monster_quota = ClampLo(monster_total / 2, 1);
+
+                        for (u32 i = 0; i < room->entity_count; i++) {
+                            if (monster_quota <= 0) { break; }
+                            entity_t* ent = &room->entities[i];
+                            if (ent->hp <= 0 || ent->type != E_MONSTER) { continue; }
+
+                            monster_quota -= 1;
+                            ent->berserk_remaining = 3;
+                        }
+                    }
+                }
             }
 
 			if (proj->hp <= 0)

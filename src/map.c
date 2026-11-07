@@ -42,6 +42,14 @@ entity_t *map_generate_room(map_room_t* room, entity_t* player, u32 depth)
 	{
 		entity_t monster = entity_init_monster();
 
+        if (depth == 1 || depth == 2) {
+            monster.fixedConsequence = CSQ_TURRET;
+        }
+
+        if (depth == 3) {
+            monster.fixedConsequence = CSQ_BERSERK;
+        }
+
 		for (u32 attempt = 0; attempt < 64; attempt++)
 		{
 			monster.pos = (Vector2){
