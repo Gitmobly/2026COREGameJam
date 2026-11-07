@@ -55,6 +55,7 @@ void weapon_fire(entity_t* ent, map_room_t* room, Vector2 dir)
 	entity_t projectile = {
 		.hp	 = 1,
 		.pos = ent->pos,
+        .spawn_pos = ent->pos,
 		.vel = Vector2Scale(dir, w->speed),
 		.type = E_PROJECTILE,
 		.name = "projectile",

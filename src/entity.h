@@ -49,6 +49,9 @@ typedef struct entity_t
 	f32		hit_flash_remaining;
     f32     invulnerability_remaining;
     f32     reload_remaining;
+    f32     dodge_cooldown;
+
+    Vector2 spawn_pos;
 } entity_t;
 
 entity_t* entity_player_init(arena_t* arena);

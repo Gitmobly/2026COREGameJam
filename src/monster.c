@@ -23,6 +23,21 @@ entity_t entity_init_monster(void)
         .radius_damage_deal = 12,
 	};
 }
+
+bool endangered_by_projectile(entity_t *proj, entity_t *entity) {
+    Vector2 dir_actual = Vector2Normalize(proj->vel);
+    Vector2 dir_ideal = Vector2Normalize(Vector2Subtract(entity->pos, proj->pos));
+
+    // NOTE: dot product is symmetrical so one point is enough
+    Vector2 point_optimal = Vector2Add(entity->pos, Vector2Scale(v2(-dir_ideal.y, dir_ideal.x), 1.2 * entity->radius_damage_take + proj->radius_damage_deal));
+    Vector2 dir_boundary = Vector2Normalize(Vector2Subtract(point_optimal, proj->pos));
+
+    f32 dot_threshold = Vector2DotProduct(dir_ideal, dir_boundary);
+    f32 dot_actual = Vector2DotProduct(dir_ideal, dir_actual);
+
+    return (dot_actual >= dot_threshold);
+}
+
 void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app)
 {
 	if (other == NULL || (other->type != E_PLAYER && other->type != E_SOUL) || other->hp <= 0)
@@ -91,6 +106,43 @@ void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app)
 	mon->vel.y	= direction.y * mon->speed;
 
 
+
+	for (u32 i = 0; i < room->entity_count; i++) {
+        if (mon->dodge_cooldown > 0) { break; }
+        if (Vector2Length(Vector2Subtract(other->pos, mon->pos)) < 100) { break; }
+
+        entity_t *proj = &room->entities[i];
+        if (proj->hp <= 0 || proj->type != E_PROJECTILE || proj->isEnemyProjectile) { continue; }
+
+        if (Vector2Length(Vector2Subtract(proj->pos, mon->pos)) > 250) { continue; }
+        if (!endangered_by_projectile(proj, mon)) { continue; }
+        TraceLog(LOG_INFO, "ABOBA");
+
+
+        f32 noticeDistance = Vector2Distance(proj->spawn_pos, mon->pos);
+        f32 chanceToDodge = Remap(noticeDistance, 100, 500, 40, 90);
+        chanceToDodge = Clamp(chanceToDodge, 50, 90);
+        if (GetRandomValue(0, 100) > chanceToDodge) { break; }
+
+        mon->dodge_cooldown = 1.5;
+
+        Vector2 dir = Vector2Normalize(Vector2Subtract(mon->pos, proj->pos));
+        dir = v2(-dir.y, dir.x);
+        Vector2 dir_toPlayer = Vector2Normalize(Vector2Subtract(other->pos, mon->pos));
+        Vector2 dir2 = v2(-dir.x, -dir.y);
+
+        if (Vector2DotProduct(dir, dir_toPlayer) < Vector2DotProduct(dir2, dir_toPlayer)) {
+            dir = dir2;
+        }
+
+        dir = Vector2Normalize(Vector2Add(dir, dir_toPlayer));
+
+        mon->knockback = Vector2Scale(dir, 800);
+        mon->knockbackDragMultiplier = 10;
+
+
+        break;
+    }
 
 
 

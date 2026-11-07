@@ -74,6 +74,7 @@ void entity_interactions(app_state_t* app)
             ent->hit_flash_remaining = ClampLo(ent->hit_flash_remaining - dt, 0);
             ent->hit_stun_remaining  = ClampLo(ent->hit_stun_remaining  - dt, 0);
             ent->invulnerability_remaining  = ClampLo(ent->invulnerability_remaining - dt, 0);
+            ent->dodge_cooldown  = ClampLo(ent->dodge_cooldown - dt, 0);
 
 			if (ent->hit_stun_remaining > 0)
 			{
@@ -234,7 +235,8 @@ void entity_interactions(app_state_t* app)
 
             // TODO: we spawn a soul upon killing a monster. At some point bullets
             // might not be the only way to kill monsters, and this should be moved
-            // to a more appropriate place
+            // to a more appropriate place. This also applies to generally triggering
+            // consequences upon killing an enemy
             if (target->hp <= 0 && target->type == E_MONSTER) {
                 Vector2 projDir = Vector2Normalize(proj->vel);
 
