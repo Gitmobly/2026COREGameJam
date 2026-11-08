@@ -243,24 +243,24 @@ void draw_game(game_state_t* state)
 
 
     {
-        f32 player_health = state->current_level.entity_player->hp;
+        f32 player_health = (f32)state->current_level.entity_player->hp;
         f32 player_maxHealth = 100;
         f32 player_health_lerp = Clamp(player_health / player_maxHealth, 0, 1);
 
 
 
-        f32 player_health_grayLerp = state->soul_active ? 0.7 : 0;
+        f32 player_health_grayLerp = state->soul_active ? 0.7f : 0.0f;
         Color player_health_color = ColorLerp(BLUE, (Color){ 100, 100, 100, 255 }, player_health_grayLerp);
 
 
-        DrawRectangle(0, SCREEN_HT - BOUNDARY_WIDTH * 0.6, SCREEN_WD * player_health_lerp, BOUNDARY_WIDTH * 0.6, player_health_color);
+        DrawRectangle(0, (int)(SCREEN_HT - BOUNDARY_WIDTH * 0.6f), (int)(SCREEN_WD * player_health_lerp), (int)(BOUNDARY_WIDTH * 0.6f), player_health_color);
 
 
         // TODO: this might get bugged if soul dies (overall run-ending sequence should be reworked)
 
         // TODO: ideally the soul mode should somehow feel fragile, idk how to do it though (particles? shaking?)
         if (state->soul_active) {
-            f32 soul_health = state->current_level.entity_soul->hp;
+            f32 soul_health = (f32)state->current_level.entity_soul->hp;
             f32 soul_maxHealth = 30;
             f32 soul_health_lerp = Clamp(soul_health / soul_maxHealth, 0, 1);
 
@@ -270,9 +270,9 @@ void draw_game(game_state_t* state)
             Color gradientEnd = YELLOW;
             gradientEnd.a = 0;
 
-            DrawRectangle(0, 0, SCREEN_WD * soul_health_lerp, BOUNDARY_WIDTH * 0.6, YELLOW);
+            DrawRectangle(0, 0, (int)(SCREEN_WD * soul_health_lerp), (int)(BOUNDARY_WIDTH * 0.6f), YELLOW);
 
-            DrawRectangleGradientV(0, 0, SCREEN_WD, SCREEN_HT * 0.6, gradientStart, gradientEnd);
+            DrawRectangleGradientV(0, 0, SCREEN_WD, (int)(SCREEN_HT * 0.6f), gradientStart, gradientEnd);
         }
         else {
             Color gradientStart = BLUE;
@@ -281,7 +281,7 @@ void draw_game(game_state_t* state)
             Color gradientEnd = BLUE;
             gradientEnd.a = 50;
 
-            DrawRectangleGradientV(0, SCREEN_HT * 0.4, SCREEN_WD, SCREEN_HT * 0.6, gradientStart, gradientEnd);
+            DrawRectangleGradientV(0, (int)(SCREEN_HT * 0.4f), SCREEN_WD, (int)(SCREEN_HT * 0.6f), gradientStart, gradientEnd);
         }
     }
 }

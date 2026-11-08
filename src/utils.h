@@ -6,6 +6,7 @@
  */
 
 #include <stdint.h>
+#include <raylib.h>
 #include <raymath.h>
 
 #define ARRAYCOUNT(x) ((sizeof(x) / sizeof(0 [x])) / ((size_t)(!(sizeof(x) % sizeof(0 [x])))))

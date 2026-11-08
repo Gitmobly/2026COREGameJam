@@ -1,4 +1,5 @@
 #include <math.h>
+#include <raylib.h>
 #include <raymath.h>
 
 #include "monster.h"
@@ -24,7 +25,7 @@ entity_t entity_init_monster(void)
 	};
 }
 
-entity_t entity_init_sniper() {
+entity_t entity_init_sniper(void) {
 	return (entity_t){
 		.hp	   = CHEATED_VALUE(70, CHEAT_MONSTER_HEALTH),
 		.speed = 0.5f,
@@ -44,7 +45,7 @@ bool endangered_by_projectile(entity_t *proj, entity_t *entity) {
     Vector2 dir_ideal = Vector2Normalize(Vector2Subtract(entity->pos, proj->pos));
 
     // NOTE: dot product is symmetrical so one point is enough
-    Vector2 point_optimal = Vector2Add(entity->pos, Vector2Scale(v2(-dir_ideal.y, dir_ideal.x), 1.2 * entity->radius_damage_take + proj->radius_damage_deal));
+    Vector2 point_optimal = Vector2Add(entity->pos, Vector2Scale(v2(-dir_ideal.y, dir_ideal.x), 1.2f * entity->radius_damage_take + proj->radius_damage_deal));
     Vector2 dir_boundary = Vector2Normalize(Vector2Subtract(point_optimal, proj->pos));
 
     f32 dot_threshold = Vector2DotProduct(dir_ideal, dir_boundary);
@@ -59,7 +60,7 @@ void entity_sniper_interact(entity_t* sniper, entity_t* other, app_state_t* app,
 		return;
 	}
 
-    dt = dt;
+    (void)dt;
     Vector2 vec_towards = Vector2Subtract(other->pos, sniper->pos);
     f32 distance = Vector2Length(vec_towards);
     Vector2 dir = Vector2Normalize(vec_towards);
@@ -89,7 +90,7 @@ void entity_sniper_interact(entity_t* sniper, entity_t* other, app_state_t* app,
 
         map_add_entity(&projectile, room);
 
-        sniper->sniper_shotDelay = 0.1;
+        sniper->sniper_shotDelay = 0.1f;
     }
 
     if (sniper->sniper_shotsFired >= 3) {
@@ -99,9 +100,9 @@ void entity_sniper_interact(entity_t* sniper, entity_t* other, app_state_t* app,
     }
 
     if (sniper->reload_remaining <= 0) {
-        sniper->reload_remaining = 2.5;
+        sniper->reload_remaining = 2.5f;
 
-        sniper->hit_stun_remaining = 0.7;
+        sniper->hit_stun_remaining = 0.7f;
         sniper->sniper_charging = true;
 
         return;
@@ -139,20 +140,20 @@ void entity_sniper_interact(entity_t* sniper, entity_t* other, app_state_t* app,
         chanceToDodge = Clamp(chanceToDodge, 70, 90);
         if (GetRandomValue(0, 100) > chanceToDodge) { break; }
 
-        sniper->dodge_cooldown = 1.0;
+        sniper->dodge_cooldown = 1.0f;
 
-        Vector2 dir = Vector2Normalize(Vector2Subtract(sniper->pos, proj->pos));
-        dir = v2(-dir.y, dir.x);
+        Vector2 dodge_dir = Vector2Normalize(Vector2Subtract(sniper->pos, proj->pos));
+        dodge_dir = v2(-dodge_dir.y, dodge_dir.x);
         Vector2 dir_toPlayer = Vector2Normalize(Vector2Subtract(other->pos, sniper->pos));
-        Vector2 dir2 = v2(-dir.x, -dir.y);
+        Vector2 dir2 = v2(-dodge_dir.x, -dodge_dir.y);
 
-        if (Vector2DotProduct(dir, dir_toPlayer) < Vector2DotProduct(dir2, dir_toPlayer)) {
-            dir = dir2;
+        if (Vector2DotProduct(dodge_dir, dir_toPlayer) < Vector2DotProduct(dir2, dir_toPlayer)) {
+            dodge_dir = dir2;
         }
 
-        dir = Vector2Normalize(Vector2Add(dir, dir_toPlayer));
+        dodge_dir = Vector2Normalize(Vector2Add(dodge_dir, dir_toPlayer));
 
-        sniper->knockback = Vector2Scale(dir, 800);
+        sniper->knockback = Vector2Scale(dodge_dir, 800);
         sniper->knockbackDragMultiplier = 10;
 
 
@@ -180,10 +181,10 @@ void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app, f
             damage = 8;
         }
 
-        other->invulnerability_remaining = 0.2;
+        other->invulnerability_remaining = 0.2f;
         other->knockback = Vector2Scale(Vector2Normalize(Vector2Subtract(other->pos, mon->pos)), 500);
         other->knockbackDragMultiplier = 6;
-        other->hit_stun_remaining = 0.25;
+        other->hit_stun_remaining = 0.25f;
         other->hp -= damage;
 
         mon->knockback = Vector2Scale(Vector2Normalize(Vector2Subtract(other->pos, mon->pos)), -200);
@@ -195,16 +196,16 @@ void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app, f
 
     f32 speed = mon->speed;
     if (distance < 200) {
-        speed *= 1.3;
+        speed *= 1.3f;
     }
 
 
 
     if (mon->berserk_remaining > 0) {
         // TODO: rename playerLastDirection to lastDirection or smth
-        Vector2 direction = Vector2MoveTowards(mon->playerLastDirection, Vector2Normalize(vec_towards), 1.5 * dt);
+        Vector2 direction = Vector2MoveTowards(mon->playerLastDirection, Vector2Normalize(vec_towards), 1.5f * dt);
         if (mon->justHitWall) {
-            direction = Vector2Scale(Vector2Normalize(vec_towards), 0.5);
+            direction = Vector2Scale(Vector2Normalize(vec_towards), 0.5f);
         }
 
         mon->playerLastDirection = direction;
@@ -229,9 +230,9 @@ void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app, f
         if (ent->hp <= 0 || ent->type != E_MONSTER || ent == mon) { continue; }
 
         Vector2 delta = Vector2Subtract(mon->pos, ent->pos);
-        f32 distance = Vector2Length(delta);
+        f32 separation = Vector2Length(delta);
 
-        Vector2 scaledDelta = Vector2Scale(delta, 1 / powf(distance, 2));
+        Vector2 scaledDelta = Vector2Scale(delta, 1 / powf(separation, 2));
 
         avg_vectorFromMonsters = Vector2Add(avg_vectorFromMonsters, scaledDelta);
         avg_count += 1;
@@ -249,8 +250,8 @@ void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app, f
         scale_awayFromMonsters = 4;
 
         f32 dot = Vector2DotProduct(Vector2Normalize(vectorFromMonsters), Vector2Normalize(vec_towards));
-        if (dot < -0.9) {
-            scale_awayFromMonsters = 0.2;
+        if (dot < -0.9f) {
+            scale_awayFromMonsters = 0.2f;
         }
     }
     else {
@@ -289,7 +290,7 @@ void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app, f
         chanceToDodge = Clamp(chanceToDodge, 50, 90);
         if (GetRandomValue(0, 100) > chanceToDodge) { break; }
 
-        mon->dodge_cooldown = 1.5;
+        mon->dodge_cooldown = 1.5f;
 
         Vector2 dir = Vector2Normalize(Vector2Subtract(mon->pos, proj->pos));
         dir = v2(-dir.y, dir.x);
