@@ -3,8 +3,9 @@
 #include "monster.h"
 #include "graphics.h"
 #include <string.h>
+#include <raymath.h>
 
-b32 map_add_entity(entity_t* entity, map_room_t* room)
+entity_t *map_add_entity(entity_t* entity, map_room_t* room)
 {
 	for (u32 i = 0; i < room->entity_count; i++)
 	{
@@ -13,45 +14,67 @@ b32 map_add_entity(entity_t* entity, map_room_t* room)
 		if (slot->type == E_PROJECTILE && slot->hp <= 0)
 		{
 			*slot = *entity;
-			return 1;
+			return slot;
 		}
 	}
 
 	if (room->entity_count >= MAP_ENTITY_MAX)
 	{
-		return 0;
+		return NULL;
 	}
 
-	room->entities[room->entity_count++] = *entity;
-	return 1;
+    entity_t *slot = &room->entities[room->entity_count++];
+	*slot = *entity;
+	return slot;
 }
 
-void map_generate_room(map_room_t* room, const entity_t* player, u32 depth)
+entity_t *map_generate_room(map_room_t* room, entity_t* player, u32 depth)
 {
 	memset(room, 0, sizeof(*room));
 
-	room->entities[0]  = *player;
-	room->entity_count = 1;
+    entity_t *spawned_player = map_add_entity(player, room);
+
+	// room->entities[0]  = *player;
+	// room->entity_count = 1;
 
 	u32 monster_count = depth < 12 ? depth : 12;
 	for (u32 i = 0; i < monster_count; i++)
 	{
 		entity_t monster = entity_init_monster();
 
+        if (depth == 1 || depth == 2) {
+            monster.fixedConsequence = CSQ_TURRET;
+        }
+
+        if (depth == 3) {
+            monster.fixedConsequence = CSQ_BERSERK;
+        }
+
+
+
+        if (depth == 5 && i == 0) {
+            monster = entity_init_sniper();
+        }
+
+        if (depth > 5) {
+            if (GetRandomValue(0, 100) < 20) {
+                monster = entity_init_sniper();
+            }
+        }
+
+
 		for (u32 attempt = 0; attempt < 64; attempt++)
 		{
 			monster.pos = (Vector2){
-				(f32)GetRandomValue(220, SCREEN_WD - PAD * 2 - 50),
-				(f32)GetRandomValue(60, SCREEN_HT - PAD * 2 - 60),
+				(f32)GetRandomValue(220, SCREEN_WD - BOUNDARY_WIDTH * 2 - 50),
+				(f32)GetRandomValue(60,  SCREEN_HT - BOUNDARY_WIDTH * 2 - 60),
 			};
 
 			b32 overlap = 0;
 			for (u32 j = 0; j < room->entity_count; j++)
 			{
 				entity_t* other = &room->entities[j];
-				f32		  dx	= other->pos.x - monster.pos.x;
-				f32		  dy	= other->pos.y - monster.pos.y;
-				if (dx * dx + dy * dy < 48.0f * 48.0f)
+                if (Vector2DistanceSqr(other->pos, monster.pos) < (48 * 48))
 				{
 					overlap = 1;
 					break;
@@ -65,4 +88,6 @@ void map_generate_room(map_room_t* room, const entity_t* player, u32 depth)
 			}
 		}
 	}
+
+    return spawned_player;
 }

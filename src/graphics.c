@@ -3,19 +3,32 @@
 #include "map.h"
 #include "main.h"
 #include "game.h"
-#include "vendor/raylib/raylib.h"
+#include <raylib.h>
+#include <raymath.h>
 #include <math.h>
 
 #include "graphics.h"
 
 Color get_color(entity_t* entity)
 {
-	return entity->type == E_MONSTER ? RED : SKYBLUE;
-}
+    switch (entity->type) {
+    default:            return GRAY;
 
-int get_size(entity_t* entity)
-{
-	return entity->type == E_PROJECTILE ? 8 : 16;
+    case E_MONSTER:     {
+                            f32 hp = (float)entity->hp;
+                            f32 max_hp = 50;
+
+                            Color color_full = RED;
+                            Color color_dead = { 120, 90, 90, 255 };
+
+                            return ColorLerp(color_dead, color_full, hp / max_hp);
+                        }
+    case E_SNIPER:      return (Color){ 120, 20, 20, 255 };
+    case E_PLAYER:      return BLUE;
+    case E_SOUL:        return YELLOW;
+    case E_TURRET:      return DARKGRAY;
+    case E_PROJECTILE:  return entity->isEnemyProjectile ? RED : BLUE;
+    }
 }
 
 internal Camera2D get_game_camera(game_state_t* game)
@@ -66,15 +79,7 @@ internal void draw_crosshair(const weapon_t* weapon)
 	if (weapon->shots_fired > 0)
 	{
 		f32 t = (f32)((now - weapon->last_shot_time) / spin_duration);
-
-		if (t < 0.0f)
-		{
-			t = 0.0f;
-		}
-		if (t > 1.0f)
-		{
-			t = 1.0f;
-		}
+        t = Clamp(t, 0, 1);
 
 		f32 remaining = 1.0f - t;
 		f32 ease	  = 1.0f - remaining * remaining * remaining;
@@ -101,26 +106,26 @@ internal void draw_crosshair(const weapon_t* weapon)
 
 internal void draw_room_walls(const map_room_t* room)
 {
-	const f32 left		= (f32)PAD;
-	const f32 right		= (f32)(SCREEN_WD - PAD);
-	const f32 top		= (f32)PAD;
-	const f32 bottom	= (f32)(SCREEN_HT - PAD);
+	const f32 left		= (f32)BOUNDARY_WIDTH;
+	const f32 right		= (f32)(SCREEN_WD - BOUNDARY_WIDTH);
+	const f32 top		= (f32)BOUNDARY_WIDTH;
+	const f32 bottom	= (f32)(SCREEN_HT - BOUNDARY_WIDTH);
 	const f32 center_y	= SCREEN_HT * 0.5f;
 	const f32 gap		= MAP_EXIT_HALF_HEIGHT;
 	const f32 thickness = 4.0f;
 
-	DrawLineEx((Vector2){left, top}, (Vector2){right, top}, thickness, LIGHTGRAY);
-	DrawLineEx((Vector2){left, bottom}, (Vector2){right, bottom}, thickness, LIGHTGRAY);
-	DrawLineEx((Vector2){left, top}, (Vector2){left, bottom}, thickness, LIGHTGRAY);
+	DrawLineEx(v2(left, top), v2(right, top), thickness, LIGHTGRAY);
+	DrawLineEx(v2(left, bottom), v2(right, bottom), thickness, LIGHTGRAY);
+	DrawLineEx(v2(left, top), v2(left, bottom), thickness, LIGHTGRAY);
 
 	if (!room->exit_open)
 	{
-		DrawLineEx((Vector2){right, top}, (Vector2){right, bottom}, thickness, LIGHTGRAY);
+		DrawLineEx(v2(right, top), v2(right, bottom), thickness, LIGHTGRAY);
 		return;
 	}
 
-	DrawLineEx((Vector2){right, top}, (Vector2){right, center_y - gap}, thickness, LIGHTGRAY);
-	DrawLineEx((Vector2){right, center_y + gap}, (Vector2){right, bottom}, thickness, LIGHTGRAY);
+	DrawLineEx(v2(right, top), v2(right, center_y - gap), thickness, LIGHTGRAY);
+	DrawLineEx(v2(right, center_y + gap), v2(right, bottom), thickness, LIGHTGRAY);
 
 	f32 elapsed = (f32)GetTime() - room->wall_break_time;
 	if (elapsed >= 0.0f && elapsed < 0.4f)
@@ -131,7 +136,7 @@ internal void draw_room_walls(const map_room_t* room)
 			f32 x = right + elapsed * (35.0f + (f32)(i % 4) * 12.0f);
 			f32 y = center_y - gap + 5.0f + (f32)i * 8.0f;
 			y += ((i & 1) ? 1.0f : -1.0f) * elapsed * 35.0f;
-			DrawRectangleV((Vector2){x, y}, (Vector2){5.0f, 5.0f}, Fade(LIGHTGRAY, 1.0f - t));
+			DrawRectangleV(v2(x, y), v2(5, 5), Fade(LIGHTGRAY, 1.0f - t));
 		}
 	}
 }
@@ -143,19 +148,25 @@ void render(app_state_t* app)
 	BeginDrawing();
 	ClearBackground(DARKGRAY);
 
-	DrawRectangle(PAD, PAD, SCREEN_WD - 2 * PAD, SCREEN_HT - 2 * PAD, BLACK);
+	DrawRectangle(BOUNDARY_WIDTH, BOUNDARY_WIDTH, GAME_WD, GAME_HT, BLACK);
 
-	b32 render_revolver = 0;
+	b32 render_revolver = false;
+    b32 render_crosshair = true;
 
 	switch (ui->current_ui->screen)
 	{
 		case GAME:
-			render_revolver = 1;
+			render_revolver = true;
+
+            if (app->game_state->soul_active) {
+                render_crosshair = false;
+            }
+
 			Camera2D camera = get_game_camera(app->game_state);
 
 			BeginMode2D(camera);
 
-			DrawRectangle(PAD, PAD, SCREEN_WD - PAD * 2, SCREEN_HT - PAD * 2, BLACK);
+			DrawRectangle(BOUNDARY_WIDTH, BOUNDARY_WIDTH, GAME_WD, GAME_HT, BLACK);
 
 			draw_room_walls(app->game_state->current_level.active_room);
 			draw_game(app->game_state);
@@ -172,16 +183,17 @@ void render(app_state_t* app)
 			break;
 	}
 
-	if (!render_revolver)
+    if (!render_crosshair) {}
+    else if (!render_revolver)
 	{
 		Vector2 mouse = GetMousePosition();
 
-		DrawLineEx((Vector2){mouse.x - 8, mouse.y}, (Vector2){mouse.x + 8, mouse.y}, 2.0f, RED);
-		DrawLineEx((Vector2){mouse.x, mouse.y - 8}, (Vector2){mouse.x, mouse.y + 8}, 2.0f, RED);
+		DrawLineEx(v2(mouse.x - 8, mouse.y), v2(mouse.x + 8, mouse.y), 2.0f, RED);
+		DrawLineEx(v2(mouse.x, mouse.y - 8), v2(mouse.x, mouse.y + 8), 2.0f, RED);
 	}
 	else
 	{
-		entity_t* player = app->game_state->current_level.player_entity;
+		entity_t* player = app->game_state->current_level.entity_player;
 
 		draw_crosshair(&player->weapon);
 	}
@@ -192,9 +204,9 @@ void render(app_state_t* app)
 void draw_combat_ui(ui_state_t* state)
 {
 	// todo render combat ui
-	DrawRectangle(PAD, SCREEN_HT - 100 - PAD, SCREEN_WD - (PAD * 2), 100, LIGHTGRAY);
-	DrawRectangle(PAD + 130, SCREEN_HT - 100 - PAD, 10, 100, BLACK);
-	DrawRectangle(PAD + 500, SCREEN_HT - 100 - PAD, 10, 100, BLACK);
+	DrawRectangle(BOUNDARY_WIDTH, SCREEN_HT - 100 - BOUNDARY_WIDTH, SCREEN_WD - (BOUNDARY_WIDTH * 2), 100, LIGHTGRAY);
+	DrawRectangle(BOUNDARY_WIDTH + 130, SCREEN_HT - 100 - BOUNDARY_WIDTH, 10, 100, BLACK);
+	DrawRectangle(BOUNDARY_WIDTH + 500, SCREEN_HT - 100 - BOUNDARY_WIDTH, 10, 100, BLACK);
 	render_ui(state->current_ui);
 }
 
@@ -202,7 +214,7 @@ void draw_game(game_state_t* state)
 {
 	map_room_t* room = state->current_level.active_room;
 
-	DrawText(TextFormat("ROOM %u", state->room_number), PAD + 12, PAD + 12, 18, LIGHTGRAY);
+	DrawText(TextFormat("ROOM %u", state->room_number), BOUNDARY_WIDTH + 12, BOUNDARY_WIDTH + 12, 18, LIGHTGRAY);
 
 	for (u32 i = 0; i < room->entity_count; i++)
 	{
@@ -213,11 +225,11 @@ void draw_game(game_state_t* state)
 			continue;
 		}
 
-		Vector2 pos	   = {(f32)PAD + ent->pos.x, (f32)PAD + ent->pos.y};
-		f32		radius = (f32)get_size(ent);
+		Vector2 pos	   = {ent->pos.x + BOUNDARY_WIDTH, ent->pos.y + BOUNDARY_WIDTH};
+		f32		radius = ent->radius_visible;
 		Color	color  = get_color(ent);
 
-		if (ent->type == E_MONSTER && ent->hit_flash_remaining > 0.0f)
+		if (entity_isEnemy(ent) && ent->hit_flash_remaining > 0.0f)
 		{
 			f32 t = ent->hit_flash_remaining / MONSTER_HIT_FLASH_TIME;
 			color = RAYWHITE;
@@ -227,5 +239,49 @@ void draw_game(game_state_t* state)
 		DrawCircleV(pos, radius, color);
 	}
 
-	fx_draw(&room->fx, (Vector2){(f32)PAD, (f32)PAD});
+	fx_draw(&room->fx, v2(BOUNDARY_WIDTH, BOUNDARY_WIDTH));
+
+
+    {
+        f32 player_health = state->current_level.entity_player->hp;
+        f32 player_maxHealth = 100;
+        f32 player_health_lerp = Clamp(player_health / player_maxHealth, 0, 1);
+
+
+
+        f32 player_health_grayLerp = state->soul_active ? 0.7 : 0;
+        Color player_health_color = ColorLerp(BLUE, (Color){ 100, 100, 100, 255 }, player_health_grayLerp);
+
+
+        DrawRectangle(0, SCREEN_HT - BOUNDARY_WIDTH * 0.6, SCREEN_WD * player_health_lerp, BOUNDARY_WIDTH * 0.6, player_health_color);
+
+
+        // TODO: this might get bugged if soul dies (overall run-ending sequence should be reworked)
+
+        // TODO: ideally the soul mode should somehow feel fragile, idk how to do it though (particles? shaking?)
+        if (state->soul_active) {
+            f32 soul_health = state->current_level.entity_soul->hp;
+            f32 soul_maxHealth = 30;
+            f32 soul_health_lerp = Clamp(soul_health / soul_maxHealth, 0, 1);
+
+            Color gradientStart = YELLOW;
+            gradientStart.a = 80;
+
+            Color gradientEnd = YELLOW;
+            gradientEnd.a = 0;
+
+            DrawRectangle(0, 0, SCREEN_WD * soul_health_lerp, BOUNDARY_WIDTH * 0.6, YELLOW);
+
+            DrawRectangleGradientV(0, 0, SCREEN_WD, SCREEN_HT * 0.6, gradientStart, gradientEnd);
+        }
+        else {
+            Color gradientStart = BLUE;
+            gradientStart.a = 0;
+
+            Color gradientEnd = BLUE;
+            gradientEnd.a = 50;
+
+            DrawRectangleGradientV(0, SCREEN_HT * 0.4, SCREEN_WD, SCREEN_HT * 0.6, gradientStart, gradientEnd);
+        }
+    }
 }

@@ -5,29 +5,31 @@
 #include "entity.h"
 #include "main.h"
 #include "actions.h"
-#include "vendor/raylib/raylib.h"
-#include "vendor/raylib/raymath.h"
+
+#include <raylib.h>
+#include <raymath.h>
 
 // Should move this to a ui manager or something but for the sake of time just keeping them here
 ui_t game_ui;
 ui_t options_ui;
 ui_t combat_ui;
 
-button_t create_button(unsigned int x, unsigned int y, int w, int h, Color bg, Color fg, const char* text,
+button_t create_button(ui_screen_t owner, u32 x, u32 y, u32 w, u32 h, Color bg, Color fg, float font_size, const char* text,
 					   void (*click)(app_state_t*))
 {
 	button_t button = {
+		.owner		  = owner,
 		.x			  = x,
 		.y			  = y,
 		.w			  = w,
 		.h			  = h,
-		.text		  = text,
-		.click		  = click,
 		.bg			  = bg,
 		.fg			  = fg,
-		.owner		  = START_UI,
-		.font		  = GetFontDefault(),
-		.font_size	  = 40.0,
+		.font_size	  = font_size,
+
+        .font		  = GetFontDefault(),
+		.text		  = text,
+		.click		  = click,
 		.button_muted = false,
 	};
 
@@ -60,9 +62,10 @@ void reframe_button(button_t* button)
 	button->y		= (int)axisPos.y;
 }
 
-label_t create_label(unsigned int x, unsigned int y, const char* text, Color fg, float fontSize, Font font)
+label_t create_label(ui_screen_t owner, u32 x, u32 y, const char* text, Color fg, float fontSize, Font font)
 {
 	label_t label = {
+        .owner     = owner,
 		.x		   = x,
 		.y		   = y,
 		.fg		   = fg,
@@ -85,9 +88,10 @@ void update_label(label_t* label)
 	label->y		= (s32)axisPos.y;
 }
 
-image_t create_image(Rectangle rect, Rectangle texture_pos, Texture2D texture, unsigned int rot)
+image_t create_image(ui_screen_t owner, Rectangle rect, Rectangle texture_pos, Texture2D texture, unsigned int rot)
 {
 	image_t image = {
+        .owner       = owner,
 		.pos		 = rect,
 		.texture_pos = texture_pos,
 		.rot		 = rot,
@@ -202,7 +206,6 @@ void unload_ui(ui_t* ui)
 
 void init_ui_components(ui_t* ui)
 {
-	// set all button owner to -1 (no owner)
 	for (int i = 0; i < MAX_BUTTONS; i++)
 	{
 		ui->buttons[i].owner = NO_OWNER;
@@ -231,22 +234,17 @@ ui_t* build_start_ui(allocators_t* allocators)
 	init_ui_components(ui);
 
 	button_t start_button =
-		create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 85, 10, 5, RAYWHITE, BLACK, "START GAME", start_click_start);
+		create_button(START_UI, PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 85, 10, 5, RAYWHITE, BLACK, 40, "START GAME", start_click_start);
 	button_t options_button =
-		create_button(PAD_COMP(POS_AXIS, 38), SCREEN_HT - 85, 10, 5, RAYWHITE, BLACK, "OPTIONS", options_click_start);
+		create_button(START_UI, PAD_COMP(POS_AXIS, 38), SCREEN_HT - 85, 10, 5, RAYWHITE, BLACK, 40, "OPTIONS", options_click_start);
 
-	start_button.owner	 = START_UI;
-	options_button.owner = START_UI;
-
-	label_t label = create_label(CENTER_AXIS, CENTER_AXIS, "2026 GameJam", RAYWHITE, 32.0f, GetFontDefault());
-	label.owner	  = START_UI;
+	label_t label = create_label(START_UI, CENTER_AXIS, CENTER_AXIS, "2026 GameJam", RAYWHITE, 32.0f, GetFontDefault());
 
 	Texture2D texture  = LoadTexture("./assets/death_start_game.png");
 	Rectangle pos	   = {CENTER_AXIS, 100, 150, 150};
 	Rectangle text_pos = {0.0f, 0.0f, (f32)texture.width, (f32)texture.height};
 
-	image_t image = create_image(pos, text_pos, texture, 0);
-	image.owner	  = START_UI;
+	image_t image = create_image(START_UI, pos, text_pos, texture, 0);
 
 	ui->buttons[0] = start_button;
 	ui->buttons[1] = options_button;
@@ -275,8 +273,7 @@ ui_t* init_options_ui(void)
 
 	init_ui_components(&ui);
 	button_t back_button =
-		create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 85, 10, 5, RAYWHITE, BLACK, "BACK", back_click_options);
-	back_button.owner = OPTIONS_UI;
+		create_button(OPTIONS_UI, PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 85, 10, 5, RAYWHITE, BLACK, 40, "BACK", back_click_options);
 
 	ui.buttons[0] = back_button;
 
@@ -309,7 +306,7 @@ void back_click_options(app_state_t* state)
 	state->ui_state->current_ui = build_start_ui(state->ui_state->allocators);
 }
 
-ui_t* init_comabat_ui(entity_t* entity, app_state_t* state)
+ui_t* init_combat_ui(entity_t* entity, app_state_t* state)
 {
 	ui_t ui = {
 		.screen = COMBAT_UI,
@@ -319,26 +316,22 @@ ui_t* init_comabat_ui(entity_t* entity, app_state_t* state)
 	(void)entity;
 
 	button_t attack =
-		create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 85, 10, 5, GRAY, RED, "Attacks", attack_click_combat);
-	attack.font_size = 22;
-	attack.owner	 = COMBAT_UI;
-	reframe_button(&attack);
+		create_button(COMBAT_UI, PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 85, 10, 5, GRAY, RED, 22, "Attacks", attack_click_combat);
 
 	button_t skills =
-		create_button(PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 120, 10, 5, GRAY, BLUE, "Skills", skills_click_combat);
-	skills.font_size = 22;
-	skills.owner	 = COMBAT_UI;
-	reframe_button(&skills);
+		create_button(COMBAT_UI, PAD_COMP(NEG_AXIS, 38), SCREEN_HT - 120, 10, 5, GRAY, BLUE, 22, "Skills", skills_click_combat);
 
 	ui.buttons[0] = attack;
 	ui.buttons[1] = skills;
 
 	// TODO event that updates this when player takes dmg
-	const char* player_hp_str = TextFormat("PLAYER'S HP : %d", state->game_state->current_level.player_entity->hp);
-	label_t		player_hp =
-		create_label(PAD_COMP(POS_AXIS, 50), SCREEN_HT - 120, player_hp_str, BLUE, 22, GetFontDefault());
-	const char* entity_hp_str = TextFormat("%s HP : %d", "ENEMY'S", state->game_state->current_level.player_entity->hp);
-	label_t		ent_hp = create_label(PAD_COMP(POS_AXIS, 50), SCREEN_HT - 85, entity_hp_str, RED, 22, GetFontDefault());
+	const char* player_hp_str = TextFormat("PLAYER'S HP : %d", state->game_state->current_level.entity_controlled->hp);
+	label_t	player_hp =
+		create_label(NO_OWNER, PAD_COMP(POS_AXIS, 50), SCREEN_HT - 120, player_hp_str, BLUE, 22, GetFontDefault());
+
+	const char* entity_hp_str = TextFormat("%s HP : %d", "ENEMY'S", state->game_state->current_level.entity_controlled->hp);
+	label_t	ent_hp =
+        create_label(NO_OWNER, PAD_COMP(POS_AXIS, 50), SCREEN_HT - 85, entity_hp_str, RED, 22, GetFontDefault());
 
 	ui.labels[0] = player_hp;
 	ui.labels[1] = ent_hp;
@@ -357,16 +350,10 @@ void attack_click_combat(app_state_t* state)
 	state->ui_state->current_ui->buttons[MAX_BUTTONS - 2].owner = NO_OWNER;
 
 	button_t punch =
-		create_button(PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 120, 10, 5, GRAY, RED, "Punch", combat_player_punch);
-	punch.font_size = 22;
-	punch.owner		= COMBAT_UI;
-	reframe_button(&punch);
+		create_button(COMBAT_UI, PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 120, 10, 5, GRAY, RED, 22, "Punch", combat_player_punch);
 
 	button_t kick =
-		create_button(PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 85, 10, 5, GRAY, RED, "Kick", combat_player_kick);
-	kick.font_size = 22;
-	kick.owner	   = COMBAT_UI;
-	reframe_button(&kick);
+		create_button(COMBAT_UI, PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 85, 10, 5, GRAY, RED, 22, "Kick", combat_player_kick);
 
 	state->ui_state->current_ui->buttons[MAX_BUTTONS - 1] = punch;
 	state->ui_state->current_ui->buttons[MAX_BUTTONS - 2] = kick;
@@ -382,9 +369,7 @@ void skills_click_combat(app_state_t* state)
 	state->ui_state->current_ui->buttons[MAX_BUTTONS - 2].owner = NO_OWNER;
 
 	button_t sm_heal =
-		create_button(PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 85, 10, 5, GRAY, BLUE, "Small Heal", skill_player_smheal);
-	sm_heal.font_size = 22;
-	sm_heal.owner	  = COMBAT_UI;
-	reframe_button(&sm_heal);
+		create_button(COMBAT_UI, PAD_COMP(NEG_AXIS, 200), SCREEN_HT - 85, 10, 5, GRAY, BLUE, 22, "Small Heal", skill_player_smheal);
+
 	state->ui_state->current_ui->buttons[MAX_BUTTONS - 1] = sm_heal;
 }

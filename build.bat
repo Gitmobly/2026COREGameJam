@@ -8,7 +8,7 @@ set compiler=%compiler% /Od &:: No optimizations
 set compiler=%compiler% /nologo
 set compiler=%compiler% /Oi &:: Substitute instruction with intrinsics if possible
 set compiler=%compiler% /wd4100 &:: Unused function parameter
-set compiler=%compiler% /I ..\src\vendor\raylib &:: Include raylib code files
+set compiler=%compiler% /I ..\vendor\raylib &:: Include raylib code files
 
 set linker=/LIBPATH:..\lib &:: Look for libraries in raylib lib folder
 set linker=%linker% raylib.lib &:: Static link raylib

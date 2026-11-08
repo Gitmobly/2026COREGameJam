@@ -1,7 +1,7 @@
 #ifndef GAMEUI
 #define GAMEUI
 
-#include "vendor/raylib/raylib.h"
+#include <raylib.h>
 #include <inttypes.h>
 #include "utils.h"
 
@@ -54,8 +54,8 @@ typedef enum
  */
 typedef struct button_t
 {
+    ui_screen_t owner;
 	u32			x, y, w, h;
-	ui_screen_t owner;
 	Color		bg, fg;
 	float		font_size;
 	Rectangle	rect;
@@ -68,8 +68,8 @@ typedef struct button_t
 
 typedef struct label_t
 {
+    ui_screen_t	 owner;
 	unsigned int x, y;
-	ui_screen_t	 owner;
 	Color		 fg;
 	float		 font_size;
 	Font		 font;
@@ -145,18 +145,18 @@ inline static void draw_image(image_t* image)
  *
  * Font size and font is set by default
  */
-button_t create_button(unsigned int x, unsigned int y, int w, int h, Color bg, Color fg, const char* text,
+button_t create_button(ui_screen_t owner, u32 x, u32 y, u32 w, u32 h, Color bg, Color fg, float font_size, const char* text,
 					   void (*click)(app_state_t*));
 
 void reframe_button(button_t* button);
 
 // todo impl add functions, i.e. add button add label
 
-label_t create_label(unsigned int x, unsigned int y, const char* text, Color fg, float fontSize, Font font);
+label_t create_label(ui_screen_t owner, u32 x, u32 y, const char* text, Color fg, float fontSize, Font font);
 
 void update_label(label_t* label);
 
-image_t create_image(Rectangle rect, Rectangle texture_pos, Texture2D texture, unsigned int rot);
+image_t create_image(ui_screen_t owner, Rectangle rect, Rectangle texture_pos, Texture2D texture, unsigned int rot);
 
 Vector2 calculate_axis_pos(unsigned int x, unsigned int y, Vector2 widthHeight);
 Vector2 calculate_axis_pos_rec(Rectangle rect);
@@ -178,7 +178,7 @@ void  options_click_start(app_state_t* state);
 ui_t* init_options_ui(void);
 void  back_click_options(app_state_t* state);
 
-ui_t* init_comabat_ui(entity_t* entity, app_state_t* state);
+ui_t* init_combat_ui(entity_t* entity, app_state_t* state);
 void  attack_click_combat(app_state_t* state);
 void  skills_click_combat(app_state_t* state);
 

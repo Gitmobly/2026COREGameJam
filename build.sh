@@ -13,7 +13,7 @@ if [[ $OSTYPE == darwin* ]]; then
 else
     gcc \
         -Wall -Wextra -Wpedantic -Werror \
-        -I./src/vendor/raylib \
+        -I./vendor/raylib \
         -L./lib \
         ./src/*.c \
         -Wl,-Bstatic  -lraylib \

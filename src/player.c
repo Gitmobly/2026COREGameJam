@@ -1,58 +1,66 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <raymath.h>
 
 #include "map.h"
 #include "entity.h"
 #include "input.h"
 #include "weapon.h"
 #include "graphics.h"
+#include "cheats.h"
 
 char* player_name = "The Hero of Our Story";
 
 entity_t* entity_player_init(arena_t* arena)
 {
-	entity_t* pla = arena_push_struct_zero(arena, entity_t);
-	pla->hp		  = 100;
-	pla->speed	  = 4;
-	pla->name	  = player_name;
-	pla->type	  = E_PLAYER;
-	pla->pos.x	  = 40;
-	pla->pos.y	  = 40;
-	return pla;
+	entity_t* player = arena_push_struct_zero(arena, entity_t);
+    *player = (entity_t){
+        .pos    = v2(40, 40),
+        .speed  = 4,
+        .hp     = CHEATED_VALUE(CHEAT_PLAYER_HEALTH, 100),
+        .name   = player_name,
+        .type   = E_PLAYER,
+
+        .radius_visible     = 16,
+        .radius_damage_take = 12,
+        .radius_damage_deal = 16,
+    };
+
+	return player;
 }
 
-void entity_player_interact(entity_t* player, entity_t* other, map_room_t* room, input_state_t* inp)
+void entity_player_interact(entity_t* player, map_room_t* room, input_state_t* inp, f32 dt)
 {
-	if (other != NULL)
-	{
-		return;
-	}
+    Vector2 direction = Vector2MoveTowards(player->playerLastDirection, inp->move, 20 * dt);
+    player->playerLastDirection = direction;
 
-	weapon_update(&player->weapon);
+    // Vector2 direction = inp->move;
+    // dt = dt;
 
-	player->vel.x = player->speed * inp->move.x;
-	player->vel.y = player->speed * inp->move.y;
+	player->vel.x = player->speed * direction.x;
+	player->vel.y = player->speed * direction.y;
 
-	if (inp->fire)
-	{
-		Vector2 mouse = GetMousePosition();
 
-		Vector2 dir = {
-			mouse.x - (player->pos.x + PAD),
-			mouse.y - (player->pos.y + PAD),
-		};
+    if (player->type == E_PLAYER) {
+        weapon_update(&player->weapon);
 
-		f32 lenSq = dir.x * dir.x + dir.y * dir.y;
+        if (inp->fire)
+        {
+            Vector2 mouse = GetMousePosition();
 
-		if (lenSq > 0.0f)
-		{
-			f32 invLen = 1.0f / sqrtf(lenSq);
+            Vector2 dir = {
+                mouse.x - (player->pos.x + BOUNDARY_WIDTH),
+                mouse.y - (player->pos.y + BOUNDARY_WIDTH),
+            };
 
-			dir.x *= invLen;
-			dir.y *= invLen;
+            if (Vector2Equals(dir, v2(0, 0))) { return; }
 
-			weapon_fire(player, room, dir);
-		}
-	}
+            weapon_fire(player, room, Vector2Normalize(dir));
+        }
+    }
+
+    if (player->type == E_SOUL) {
+
+    }
 }

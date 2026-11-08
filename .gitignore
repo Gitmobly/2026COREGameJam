@@ -57,3 +57,4 @@ dkms.conf
 # Shit
 build/
 .build/
+/tags
