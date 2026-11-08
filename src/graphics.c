@@ -261,7 +261,7 @@ void draw_game(game_state_t* state)
         // TODO: ideally the soul mode should somehow feel fragile, idk how to do it though (particles? shaking?)
         if (state->soul_active) {
             f32 soul_health = state->current_level.entity_soul->hp;
-            f32 soul_maxHealth = 20;
+            f32 soul_maxHealth = 30;
             f32 soul_health_lerp = Clamp(soul_health / soul_maxHealth, 0, 1);
 
             Color gradientStart = YELLOW;

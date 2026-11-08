@@ -190,7 +190,7 @@ void entity_monster_interact(entity_t* mon, entity_t* other, app_state_t* app, f
         mon->knockbackDragMultiplier = 6;
         mon->playerLastDirection = Vector2Normalize(vec_towards);
 
-		return;
+		// return;
 	}
 
     f32 speed = mon->speed;
