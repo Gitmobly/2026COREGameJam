@@ -25,6 +25,7 @@ typedef enum
 	E_UNKNOWN,
 
 	E_MONSTER,
+    E_SNIPER,
     E_TURRET,
 
 	E_PROJECTILE,
@@ -63,6 +64,10 @@ typedef struct entity_t
     f32     dodge_cooldown;
     f32     berserk_remaining;
 
+    b32     sniper_charging;
+    s32     sniper_shotsFired;
+    f32     sniper_shotDelay;
+
     Consequence fixedConsequence;
 
     b32 justHitWall;
@@ -72,3 +77,4 @@ typedef struct entity_t
 
 entity_t* entity_player_init(arena_t* arena);
 void	  entity_interactions(app_state_t* app);
+b32       entity_isEnemy(entity_t *e);

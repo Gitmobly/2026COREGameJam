@@ -13,6 +13,14 @@
 
 #include <raymath.h>
 
+b32 entity_isEnemy(entity_t *e) {
+    // NOTE: turrets are not really enemies because we cant
+    // kill them, and they dont count when opening the exit
+    // (we might still want to make projectiles disappear
+    // when hitting a turret though?)
+    return e->type == E_MONSTER || e->type == E_SNIPER;
+}
+
 void entity_interactions(app_state_t* app)
 {
 	level_state_t* level = &app->game_state->current_level;
@@ -23,7 +31,7 @@ void entity_interactions(app_state_t* app)
 	fx_update(&room->fx, dt);
 	game->hit_shake_remaining = ClampLo(game->hit_shake_remaining - dt, 0);
 
-    if (level->entity_controlled->hp <= 0) {
+    if (level->entity_controlled->hp <= 0 || level->entity_player->hp <= 0) {
 		app->ui_state->current_ui = init_combat_ui(NULL, app);
         return;
     }
@@ -57,9 +65,10 @@ void entity_interactions(app_state_t* app)
         level->entity_player->knockback = Vector2Scale(direction, 500);
         level->entity_player->knockbackDragMultiplier = 10;
         // TODO: max health should be explicit (potentially upgradable?)
-        level->entity_player->hp = Clamp(level->entity_player->hp + 2, 0, 100);
+        level->entity_player->hp = Clamp(level->entity_player->hp + 8, 0, 100);
 
         level->entity_soul->hp = 0;
+        level->entity_soul = NULL;
     }
 
     entity_player_interact(level->entity_controlled, room, app->input_state, dt);
@@ -74,11 +83,13 @@ void entity_interactions(app_state_t* app)
 		}
 
 		{
-            ent->hit_flash_remaining = ClampLo(ent->hit_flash_remaining - dt, 0);
-            ent->hit_stun_remaining  = ClampLo(ent->hit_stun_remaining  - dt, 0);
-            ent->invulnerability_remaining  = ClampLo(ent->invulnerability_remaining - dt, 0);
-            ent->dodge_cooldown  = ClampLo(ent->dodge_cooldown - dt, 0);
-            ent->berserk_remaining  = ClampLo(ent->berserk_remaining - dt, 0);
+            ent->hit_flash_remaining        = ClampLo(ent->hit_flash_remaining          - dt, 0);
+            ent->hit_stun_remaining         = ClampLo(ent->hit_stun_remaining           - dt, 0);
+            ent->invulnerability_remaining  = ClampLo(ent->invulnerability_remaining    - dt, 0);
+            ent->dodge_cooldown             = ClampLo(ent->dodge_cooldown               - dt, 0);
+            ent->berserk_remaining          = ClampLo(ent->berserk_remaining            - dt, 0);
+            ent->sniper_shotDelay           = ClampLo(ent->sniper_shotDelay             - dt, 0);
+            ent->reload_remaining           = ClampLo(ent->reload_remaining             - dt, 0);
 
 			if (ent->hit_stun_remaining > 0)
 			{
@@ -97,6 +108,15 @@ void entity_interactions(app_state_t* app)
 			}
         }
 
+        if (ent->type == E_SNIPER) {
+			entity_sniper_interact(ent, level->entity_controlled, app, dt);
+
+			if (app->ui_state->current_ui->screen != GAME)
+			{
+				return;
+			}
+        }
+
         if (ent->type == E_SOUL) {
             f32 distance = Vector2Distance(ent->pos, level->entity_player->pos);
             if (distance < level->entity_player->radius_visible + level->entity_soul->radius_visible) {
@@ -105,7 +125,6 @@ void entity_interactions(app_state_t* app)
         }
 
         if (ent->type == E_TURRET) {
-            ent->reload_remaining = ClampLo(ent->reload_remaining - dt, 0);
             if (ent->reload_remaining <= 0) {
                 ent->reload_remaining = 1.5;
 
@@ -122,7 +141,7 @@ void entity_interactions(app_state_t* app)
 
                         .isEnemyProjectile = true,
 
-                        .projectileDamage = 10,
+                        .projectileDamage = 7,
 
                         .radius_visible     = 10,
                         .radius_damage_deal = 8,
@@ -239,7 +258,7 @@ void entity_interactions(app_state_t* app)
             // might not be the only way to kill monsters, and this should be moved
             // to a more appropriate place. This also applies to generally triggering
             // consequences upon killing an enemy
-            if (target->hp <= 0 && target->type == E_MONSTER) {
+            if (target->hp <= 0 && entity_isEnemy(target)) {
                 Vector2 projDir = Vector2Normalize(proj->vel);
 
 
@@ -251,12 +270,12 @@ void entity_interactions(app_state_t* app)
                 game->soul_needsToBeSpawned = true;
                 game->soul_entityToSpawn = (entity_t){
                     .pos        = target->pos,
-                    .speed      = 3,
+                    .speed      = 4,
                     .knockback  = Vector2Scale(projDir, 700),
                     .knockbackDragMultiplier = 10,
                     .hit_stun_remaining = 0.25,
 
-                    .hp         = 20,
+                    .hp         = 30,
                     .name       = "aboba",
                     .type       = E_SOUL,
 
@@ -270,6 +289,21 @@ void entity_interactions(app_state_t* app)
                 Consequence csq = GetRandomValue(CSQ_FIRST, CSQ_COUNT - 1);
                 if (target->fixedConsequence != CSQ_RANDOM) {
                     csq = target->fixedConsequence;
+                }
+
+                // b32 madeSniper = false;
+                for (u32 i = 0; i < room->entity_count; i++) {
+                    entity_t* ent = &room->entities[i];
+                    if (ent->hp <= 0 || !entity_isEnemy(ent)) { continue; }
+
+                    if (game->room_number > 5 && ent->type == E_MONSTER && GetRandomValue(0, 100) < 10) {
+                        ent->type = E_SNIPER;
+                        // madeSniper = true;
+                    }
+
+                    if (ent->hp <= 20) {
+                        ent->hp += GetRandomValue(0, 15);
+                    }
                 }
 
                 if (csq == CSQ_TURRET) {
@@ -298,6 +332,7 @@ void entity_interactions(app_state_t* app)
 
                     for (u32 i = 0; i < room->entity_count; i++) {
                         entity_t* ent = &room->entities[i];
+                        // TODO: we might want to add berserk to E_SNIPER somehow (probably different behavior)
                         if (ent->hp <= 0 || ent->type != E_MONSTER) { continue; }
 
                         monster_total += 1;
@@ -347,7 +382,7 @@ void entity_interactions(app_state_t* app)
 		{
 			entity_t* ent = &room->entities[i];
 
-			if (ent->type == E_MONSTER && ent->hp > 0)
+			if (entity_isEnemy(ent) && ent->hp > 0)
 			{
 				monsters_alive = true;
 				break;

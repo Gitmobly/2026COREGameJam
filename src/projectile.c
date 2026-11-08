@@ -21,7 +21,7 @@ void entity_projectile_interact(entity_t* proj, entity_t* other, map_room_t* roo
     }
 
     if ((proj->isEnemyProjectile && other->type != E_PLAYER && other->type != E_SOUL) ||
-        (!proj->isEnemyProjectile && other->type != E_MONSTER))
+        (!proj->isEnemyProjectile && !entity_isEnemy(other)))
     {
         return;
     }

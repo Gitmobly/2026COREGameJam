@@ -51,28 +51,27 @@ Apart from implementing these, we have to additionally implement:
 
 ***
 
-Okay this turned out to be even cooler than I assumed. Not only
-is there an aspect of navigating through bullet hell, there's also
-an aspect of positioning around enemies to try and kill them in a
-more convenient spot. Since your bullets are fast, there's enough
-incentive to snipe enemies, which leads to cool pathfinding back
-to your body.
+Playing against the sniper seems to be quite fun, you have to really
+aggressively press it against the wall, all while dodging everything
+else.
 
-That said, spawning a turret every time an enemy dies is probably
-a bit too much, at some point it's just barely possible to dodge
-everything. We need more consequences that somehow affect all
-remaining enemies, or anything else that doesn't simply make more
-bullets spawn.
+It's not that rare to be quickly bursted down. Sometimes it makes
+sense - you have to pay attention to where the enemies are when
+they go berserk. But sometimes there's just too much happening
+and it feels unfair. I'm thinking of an ability (unlockable or
+permanent?) to push away all enemies in some radius, with like 10s
+cooldown. Other defensive options would be nice too. Also sometimes
+berserk monsters can just push you into a corner and you cant do
+anything
 
-Some of the things I'm thinking of doing before my week ends:
+Also on the last day of my week I figured out that you can hold LMB
+to continuously shoot. This doesn't make it *that* much easier, but
+makes me think about *some* ammo management - maybe you can have
+a heavy weapon that does a fuckton of damage which needs reloading,
+and something lighter without ammo? Potentially making the revolver
+crosshair relevant agian?
 
-- [ ] Sniper enemies (with bullets that kill your bullets?)
-- [x] Monsters randomly rushing you down when another is killed
-- [ ] Some enemy that (somehow) disincentivises sniping it
-    - [x] Enemies trying to dodge your bullets?
-- [x] Some method of healing (probably heal a bit on soul re-enter)
-
-I'm also not sure what to do with the revolver crosshair thingy -
-I really like how it looks, but having to reload doesn't really
-work with this (or the previous) gameloop. Just leave it as a
-cool visual?
+Also, really important - when playing I kinda feel the game fantasy
+of aggressively mowing through enemies while having to mostly dodge
+bullets. If we make getting bursted down less often, this could become
+even more visceral

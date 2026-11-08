@@ -23,6 +23,7 @@ Color get_color(entity_t* entity)
 
                             return ColorLerp(color_dead, color_full, hp / max_hp);
                         }
+    case E_SNIPER:      return (Color){ 120, 20, 20, 255 };
     case E_PLAYER:      return BLUE;
     case E_SOUL:        return YELLOW;
     case E_TURRET:      return DARKGRAY;
@@ -228,7 +229,7 @@ void draw_game(game_state_t* state)
 		f32		radius = ent->radius_visible;
 		Color	color  = get_color(ent);
 
-		if (ent->type == E_MONSTER && ent->hit_flash_remaining > 0.0f)
+		if (entity_isEnemy(ent) && ent->hit_flash_remaining > 0.0f)
 		{
 			f32 t = ent->hit_flash_remaining / MONSTER_HIT_FLASH_TIME;
 			color = RAYWHITE;

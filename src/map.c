@@ -50,6 +50,19 @@ entity_t *map_generate_room(map_room_t* room, entity_t* player, u32 depth)
             monster.fixedConsequence = CSQ_BERSERK;
         }
 
+
+
+        if (depth == 5 && i == 0) {
+            monster = entity_init_sniper();
+        }
+
+        if (depth > 5) {
+            if (GetRandomValue(0, 100) < 20) {
+                monster = entity_init_sniper();
+            }
+        }
+
+
 		for (u32 attempt = 0; attempt < 64; attempt++)
 		{
 			monster.pos = (Vector2){
