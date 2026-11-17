@@ -18,6 +18,7 @@ typedef struct map_room_t
 	u32	   loot_count;
 
 	b32			exit_open;
+	u32     exit_side;
 	f32			wall_break_time;
 	fx_system_t fx;
 } map_room_t;

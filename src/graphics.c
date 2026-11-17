@@ -111,21 +111,72 @@ internal void draw_room_walls(const map_room_t* room)
 	const f32 top		= (f32)BOUNDARY_WIDTH;
 	const f32 bottom	= (f32)(SCREEN_HT - BOUNDARY_WIDTH);
 	const f32 center_y	= SCREEN_HT * 0.5f;
+	const f32 center_x	= SCREEN_WD * 0.5f;
 	const f32 gap		= MAP_EXIT_HALF_HEIGHT;
 	const f32 thickness = 4.0f;
 
-	DrawLineEx(v2(left, top), v2(right, top), thickness, LIGHTGRAY);
-	DrawLineEx(v2(left, bottom), v2(right, bottom), thickness, LIGHTGRAY);
-	DrawLineEx(v2(left, top), v2(left, bottom), thickness, LIGHTGRAY);
-
 	if (!room->exit_open)
 	{
+		DrawLineEx(v2(left, top), v2(right, top), thickness, LIGHTGRAY);
+		DrawLineEx(v2(left, bottom), v2(right, bottom), thickness, LIGHTGRAY);
+		DrawLineEx(v2(left, top), v2(left, bottom), thickness, LIGHTGRAY);
 		DrawLineEx(v2(right, top), v2(right, bottom), thickness, LIGHTGRAY);
 		return;
 	}
 
-	DrawLineEx(v2(right, top), v2(right, center_y - gap), thickness, LIGHTGRAY);
-	DrawLineEx(v2(right, center_y + gap), v2(right, bottom), thickness, LIGHTGRAY);
+	u32 x_break;
+	u32 y_break;
+	switch (room->exit_side) {
+		// Right exit
+		case 1:
+			DrawLineEx(v2(right, top), v2(right, center_y - gap), thickness, LIGHTGRAY);
+			DrawLineEx(v2(right, center_y + gap), v2(right, bottom), thickness, LIGHTGRAY);
+			DrawLineEx(v2(left, top), v2(right, top), thickness, LIGHTGRAY);
+			DrawLineEx(v2(left, bottom), v2(right, bottom), thickness, LIGHTGRAY);
+			DrawLineEx(v2(left, top), v2(left, bottom), thickness, LIGHTGRAY);
+			x_break = right;
+			y_break = center_y - gap;
+			break;
+		// Left exit
+		case 2:
+			DrawLineEx(v2(left, top), v2(left, center_y - gap), thickness, LIGHTGRAY);
+			DrawLineEx(v2(left, center_y + gap), v2(left, bottom), thickness, LIGHTGRAY);
+			DrawLineEx(v2(left, top), v2(right, top), thickness, LIGHTGRAY);
+			DrawLineEx(v2(left, bottom), v2(right, bottom), thickness, LIGHTGRAY);
+			DrawLineEx(v2(right, top), v2(right, bottom), thickness, LIGHTGRAY);
+			x_break = left;
+			y_break = center_y - gap;
+			break;
+		// Top exit
+		case 3:
+			DrawLineEx(v2(left, top), v2(center_x - gap, top), thickness, LIGHTGRAY);
+			DrawLineEx(v2(center_x + gap, top), v2(right, top), thickness, LIGHTGRAY);
+			DrawLineEx(v2(left, bottom), v2(right, bottom), thickness, LIGHTGRAY);
+			DrawLineEx(v2(left, top), v2(left, bottom), thickness, LIGHTGRAY);
+			DrawLineEx(v2(right, top), v2(right, bottom), thickness, LIGHTGRAY);
+			x_break = center_x - gap;
+			y_break = top;
+			break;
+		// Bottom exit
+		case 4:
+			DrawLineEx(v2(left, bottom), v2(center_x - gap, bottom), thickness, LIGHTGRAY);
+			DrawLineEx(v2(center_x + gap, bottom), v2(right, bottom), thickness, LIGHTGRAY);
+			DrawLineEx(v2(left, top), v2(right, top), thickness, LIGHTGRAY);
+			DrawLineEx(v2(left, top), v2(left, bottom), thickness, LIGHTGRAY);
+			DrawLineEx(v2(right, top), v2(right, bottom), thickness, LIGHTGRAY);
+			x_break = center_x - gap;
+			y_break = bottom;
+			break;
+		default:
+			DrawLineEx(v2(right, top), v2(right, center_y - gap), thickness, LIGHTGRAY);
+			DrawLineEx(v2(right, center_y + gap), v2(right, bottom), thickness, LIGHTGRAY);
+			DrawLineEx(v2(left, top), v2(right, top), thickness, LIGHTGRAY);
+			DrawLineEx(v2(left, bottom), v2(right, bottom), thickness, LIGHTGRAY);
+			DrawLineEx(v2(left, top), v2(left, bottom), thickness, LIGHTGRAY);
+			x_break = right;
+			y_break = center_y - gap;
+			break;
+	}
 
 	f32 elapsed = (f32)GetTime() - room->wall_break_time;
 	if (elapsed >= 0.0f && elapsed < 0.4f)
@@ -133,10 +184,17 @@ internal void draw_room_walls(const map_room_t* room)
 		f32 t = elapsed / 0.4f;
 		for (int i = 0; i < 12; i++)
 		{
-			f32 x = right + elapsed * (35.0f + (f32)(i % 4) * 12.0f);
-			f32 y = center_y - gap + 5.0f + (f32)i * 8.0f;
-			y += ((i & 1) ? 1.0f : -1.0f) * elapsed * 35.0f;
-			DrawRectangleV(v2(x, y), v2(5, 5), Fade(LIGHTGRAY, 1.0f - t));
+			if (room->exit_side > 2) {
+				f32 x = x_break + 5.0f + (f32)i * 8.0f;
+				x += ((i & 1) ? 1.0f : -1.0f) * elapsed * 35.0f;
+				f32 y = y_break + elapsed * (35.0f + (f32)(i % 4) * 12.0f);
+				DrawRectangleV(v2(x, y), v2(5, 5), Fade(LIGHTGRAY, 1.0f - t));
+			} else {
+				f32 x = x_break + elapsed * (35.0f + (f32)(i % 4) * 12.0f);
+				f32 y = y_break + 5.0f + (f32)i * 8.0f;
+				y += ((i & 1) ? 1.0f : -1.0f) * elapsed * 35.0f;
+				DrawRectangleV(v2(x, y), v2(5, 5), Fade(LIGHTGRAY, 1.0f - t));
+			}
 		}
 	}
 }
