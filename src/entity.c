@@ -194,17 +194,33 @@ void entity_interactions(app_state_t* app)
 
 		if (ent->type == E_MONSTER) {
 
-        }
+    }
 
 		if (ent->type == E_PLAYER)
 		{
-			f32 exit_y		 = GAME_HT * 0.5f;
 			f32 half_opening = MAP_EXIT_HALF_HEIGHT - radius;
-			b32 inside_exit	 = next.y >= exit_y - half_opening && next.y <= exit_y + half_opening;
+			f32 exit_y		 = GAME_HT * 0.5f;
+			f32 exit_x		 = GAME_WD * 0.5f;
+			b32 inside_exit;
+			switch (room->exit_side) {
+				case 1:
+					inside_exit	 = next.y >= exit_y - half_opening && next.y <= exit_y + half_opening && next.x > (GAME_WD - 1.5f * radius);
+					break;
+				case 2:
+					inside_exit	 = next.y >= exit_y - half_opening && next.y <= exit_y + half_opening && next.x < (1.5f * radius);
+					break;
+				case 3:
+					inside_exit	 = next.x >= exit_x - half_opening && next.x <= exit_x + half_opening && next.y < (1.5f * radius);
+					break;
+				case 4:
+					inside_exit	 = next.x >= exit_x - half_opening && next.x <= exit_x + half_opening && next.y > (GAME_HT - 1.5f * radius);
+					break;
+				default:
+					inside_exit	 = next.y >= exit_y - half_opening && next.y <= exit_y + half_opening && next.x > (GAME_WD - 1.5f * radius);
+					break;
+			}
 
-            // TODO: we should probably randomize which side has the exit, so that the player cant camp
-            // (it's really not *that* important though)
-			if (room->exit_open && inside_exit && next.x > (GAME_WD - 1.5f * radius) && !game->soul_active)
+			if (room->exit_open && inside_exit && !game->soul_active)
 			{
 				game_next_room(app);
 				return;

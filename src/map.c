@@ -37,6 +37,7 @@ entity_t *map_generate_room(map_room_t* room, entity_t* player, u32 depth)
 	// room->entities[0]  = *player;
 	// room->entity_count = 1;
 
+	room->exit_side = GetRandomValue(1, 4);
 	u32 monster_count = depth < 12 ? depth : 12;
 	for (u32 i = 0; i < monster_count; i++)
 	{

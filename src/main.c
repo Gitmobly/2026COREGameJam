@@ -48,7 +48,7 @@ int main(void)
 
 	game_state->current_level.active_room	= room;
 	game_state->current_level.entity_player = spawned_player;
-    game_state->current_level.entity_controlled = spawned_player;
+  game_state->current_level.entity_controlled = spawned_player;
 
 	input_state_t* inp	   = arena_push_struct_zero(permanent_arena, input_state_t);
 	app_state->input_state = inp;
